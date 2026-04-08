@@ -15,7 +15,6 @@ export class EpButton extends LitElement {
       border-radius: 4px;
       font-size: 14px;
       font-weight: 700;
-      text-transform: uppercase;
       cursor: pointer;
       transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
       line-height: 1.5;
@@ -29,6 +28,11 @@ export class EpButton extends LitElement {
     button:focus-visible {
       outline: 2px solid var(--dark-color, #576273);
       outline-offset: 2px;
+    }
+
+    /* Uppercase */
+    :host([uppercase]) button {
+      text-transform: uppercase;
     }
 
     /* Default */
@@ -47,7 +51,7 @@ export class EpButton extends LitElement {
     /* Primary */
     :host([variant="primary"]) button {
       background: var(--text-color, #485365);
-      color: white;
+      color: var(--primary-color, #64d29b);
       border: 1px solid var(--text-color, #485365);
     }
 
@@ -105,6 +109,7 @@ export class EpButton extends LitElement {
 
   @property({ reflect: true }) variant: 'default' | 'primary' | 'ghost' | 'icon' = 'default';
   @property({ reflect: true }) size: 'small' | 'medium' | 'large' = 'medium';
+  @property({ reflect: true, type: Boolean }) uppercase = false
   @property({ type: Boolean, reflect: true }) disabled = false;
   @property() type: 'button' | 'submit' | 'reset' = 'button';
 

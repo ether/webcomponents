@@ -53,6 +53,17 @@ export const Primary: Story = {
   },
 };
 
+export const PrimaryScreamingCase: Story = {
+  args: { variant: 'primary' },
+  render: (args) => html`
+    <ep-button variant="${args.variant}" uppercase>Save changes</ep-button>
+  `,
+  play: async ({ canvasElement }) => {
+    const { button } = await getButton(canvasElement);
+    await expect(button).not.toBe(null);
+  },
+};
+
 export const Ghost: Story = {
   args: { variant: 'ghost' },
   render: (args) => html`
