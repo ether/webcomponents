@@ -202,11 +202,13 @@ export const ThemeSwitching: Story = {
 
     // Switch to dark
     theme.name = 'colibris-dark';
+    await (theme as any).updateComplete;
     await expect(theme.name).toBe('colibris-dark');
     await expect(getComputedStyle(theme).getPropertyValue('--bg-color').trim()).toBe('#2c3143');
 
     // Switch back
     theme.name = 'colibris';
+    await (theme as any).updateComplete;
     await expect(getComputedStyle(theme).getPropertyValue('--bg-color').trim()).toBe('white');
   },
 };
@@ -241,8 +243,11 @@ export const RegisterCustomTheme: Story = {
     });
 
     const theme = canvasElement.querySelector('#custom-theme')! as EpTheme;
-    // Force re-apply
+    // Force re-apply: change to something else first, then back
+    theme.name = 'colibris';
+    await (theme as any).updateComplete;
     theme.name = 'custom-ocean';
+    await (theme as any).updateComplete;
 
     await expect(getComputedStyle(theme).getPropertyValue('--bg-color').trim()).toBe('#0d1b2a');
     await expect(getComputedStyle(theme).getPropertyValue('--primary-color').trim()).toBe('#48b5c4');

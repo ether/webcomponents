@@ -93,9 +93,9 @@ export const HexInputChange: Story = {
 
     const input = host.shadowRoot!.querySelector('.hex-input') as HTMLInputElement;
 
-    await userEvent.clear(input);
-    await userEvent.type(input, '#ff0000');
-    await userEvent.keyboard('{Enter}');
+    // Set value programmatically (userEvent.clear doesn't work on shadow DOM inputs)
+    input.value = '#ff0000';
+    input.dispatchEvent(new Event('change', { bubbles: true }));
 
     await waitFor(() => {
       expect(handler).toHaveBeenCalled();
@@ -168,7 +168,7 @@ export const ClickOnSquare: Story = {
 export const WithoutInput: Story = {
   args: { showInput: false },
   render: (args) => html`
-    <ep-color-wheel size="${args.size}" value="${args.value}"></ep-color-wheel>
+    <ep-color-wheel size="${args.size}" value="${args.value}" .showInput="${false}"></ep-color-wheel>
   `,
   play: async ({ canvasElement }) => {
     const host = await ready(canvasElement);

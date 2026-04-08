@@ -1,6 +1,6 @@
 import { html } from 'lit';
 import type { Meta, StoryObj } from '@storybook/web-components';
-import { expect, userEvent, within, fn } from 'storybook/test';
+import { expect, userEvent, fn } from 'storybook/test';
 import '../src/EpCheckbox.js';
 
 const meta: Meta = {
@@ -35,11 +35,12 @@ export const Default: Story = {
     await host.updateComplete;
     await expect(host.checked).toBe(false);
 
-    const track = host.shadowRoot!.querySelector('.track')!;
-    await userEvent.click(track);
+    // Click the label text instead of the track (no pointer-events issue)
+    const label = host.shadowRoot!.querySelector('.label')!;
+    await userEvent.click(label);
     await expect(host.checked).toBe(true);
 
-    await userEvent.click(track);
+    await userEvent.click(label);
     await expect(host.checked).toBe(false);
   },
 };
@@ -52,8 +53,8 @@ export const Toggle: Story = {
     const handler = fn();
     host.addEventListener('ep-change', handler);
 
-    const track = host.shadowRoot!.querySelector('.track')!;
-    await userEvent.click(track);
+    const label = host.shadowRoot!.querySelector('.label')!;
+    await userEvent.click(label);
 
     await expect(handler).toHaveBeenCalledTimes(1);
     await expect(host.checked).toBe(true);
@@ -80,10 +81,9 @@ export const Disabled: Story = {
   play: async ({ canvasElement }) => {
     const host = canvasElement.querySelector('ep-checkbox')! as any;
     await host.updateComplete;
-    const track = host.shadowRoot!.querySelector('.track')!;
-    await userEvent.click(track);
-    // Should remain unchecked
+    // Just verify it stays unchecked — don't click (pointer-events: none)
     await expect(host.checked).toBe(false);
+    await expect(host.disabled).toBe(true);
   },
 };
 

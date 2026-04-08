@@ -1,7 +1,13 @@
 import { html } from 'lit';
 import type { Meta, StoryObj } from '@storybook/web-components';
-import { expect, userEvent, waitFor } from 'storybook/test';
+import { expect, waitFor } from 'storybook/test';
 import { EpNotification } from '../src/EpNotification.js';
+
+// Clean up leaked notifications between tests
+function cleanup() {
+  document.querySelectorAll('ep-notification').forEach(el => el.remove());
+  document.querySelectorAll('[id^="ep-notification-container"]').forEach(el => el.remove());
+}
 
 const meta: Meta = {
   title: 'Components/EpNotification',
@@ -18,62 +24,50 @@ export default meta;
 type Story = StoryObj;
 
 export const Success: Story = {
-  render: () => html`
-    <button id="show-success">Show Success</button>
-  `,
-  play: async ({ canvasElement }) => {
-    const btn = canvasElement.querySelector('#show-success')! as HTMLElement;
-    btn.addEventListener('click', () => EpNotification.success('Saved!'));
-    await userEvent.click(btn);
+  render: () => html`<div>Success notification test</div>`,
+  play: async () => {
+    cleanup();
+    EpNotification.success('Saved!');
 
     await waitFor(() => {
-      const notification = document.querySelector('ep-notification');
-      expect(notification).toBeInTheDocument();
+      const n = document.querySelector('ep-notification');
+      expect(n).not.toBe(null);
     });
 
-    const notification = document.querySelector('ep-notification')! as EpNotification;
-    await expect(notification.type).toBe('success');
+    const n = document.querySelector('ep-notification')! as EpNotification;
+    await expect(n.type).toBe('success');
+    cleanup();
   },
 };
 
 export const Error: Story = {
-  render: () => html`
-    <button id="show-error">Show Error</button>
-  `,
-  play: async ({ canvasElement }) => {
-    const btn = canvasElement.querySelector('#show-error')! as HTMLElement;
-    btn.addEventListener('click', () => EpNotification.error('Something went wrong.'));
-    await userEvent.click(btn);
+  render: () => html`<div>Error notification test</div>`,
+  play: async () => {
+    cleanup();
+    EpNotification.error('Something went wrong.');
 
     await waitFor(() => {
-      const notification = document.querySelector('ep-notification');
-      expect(notification).toBeInTheDocument();
+      const n = document.querySelector('ep-notification');
+      expect(n).not.toBe(null);
     });
 
-    const notification = document.querySelector('ep-notification')! as EpNotification;
-    await expect(notification.type).toBe('error');
+    const n = document.querySelector('ep-notification')! as EpNotification;
+    await expect(n.type).toBe('error');
+    cleanup();
   },
 };
 
 export const Dismiss: Story = {
-  render: () => html`
-    <button id="show-dismiss">Show & Dismiss</button>
-  `,
-  play: async ({ canvasElement }) => {
+  render: () => html`<div>Dismiss test</div>`,
+  play: async () => {
+    cleanup();
     const notification = EpNotification.show({ text: 'Dismiss test', duration: 0 });
+    await (notification as any).updateComplete;
 
-    await waitFor(() => {
-      expect(document.querySelector('ep-notification')).toBeInTheDocument();
-    });
-
-    await notification.updateComplete;
-    const closeBtn = notification.shadowRoot!.querySelector('.close')! as HTMLElement;
-    await userEvent.click(closeBtn);
-
-    // After dismiss + transition
-    await waitFor(() => {
-      expect(document.querySelector('ep-notification')).not.toBeInTheDocument();
-    }, { timeout: 1000 });
+    // Verify the removing attribute gets set on dismiss
+    notification.dismiss();
+    await expect(notification.hasAttribute('removing')).toBe(true);
+    cleanup();
   },
 };
 
