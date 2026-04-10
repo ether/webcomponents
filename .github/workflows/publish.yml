@@ -17,6 +17,9 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
 
       - uses: pnpm/action-setup@v4
         with:
@@ -30,25 +33,36 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: Set version
+        run: |
+          npm pkg set version="${{ inputs.version }}"
+          ACTUAL_VERSION=$(node -p "require('./package.json').version")
+          if [ "$ACTUAL_VERSION" != "${{ inputs.version }}" ]; then
+            echo "Version update failed: expected ${{ inputs.version }}, got $ACTUAL_VERSION"
+            exit 1
+          fi
+
       - name: Type check
         run: pnpm tsc --noEmit
 
       - name: Build
         run: pnpm build
 
-      - name: Set version
-        run: npm version "${{ inputs.version }}" --no-git-tag-version
-
       - name: Publish
         run: pnpm publish --access public --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Tag & push
+      - name: Commit, tag & push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add package.json
-          git commit -m "release: v${{ inputs.version }}"
+          git add package.json pnpm-lock.yaml
+          if git diff --cached --quiet; then
+            echo "No package metadata changes to commit"
+          else
+            git commit -m "release: v${{ inputs.version }}"
+            git push origin HEAD:main
+          fi
           git tag "v${{ inputs.version }}"
-          git push origin HEAD --tags
+          git push origin "v${{ inputs.version }}"

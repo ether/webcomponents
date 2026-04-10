@@ -3,7 +3,14 @@ import type { Meta, StoryObj } from '@storybook/web-components';
 import { expect } from 'storybook/test';
 import '../src/EpUserBadge.js';
 
-const meta: Meta = {
+type EpUserBadgeArgs = {
+  name: string;
+  color: string;
+  size: 'small' | 'medium' | 'large';
+  online: boolean;
+};
+
+const meta: Meta<EpUserBadgeArgs> = {
   title: 'Components/EpUserBadge',
   component: 'ep-user-badge',
   argTypes: {
@@ -22,10 +29,10 @@ const meta: Meta = {
 
 export default meta;
 
-type Story = StoryObj;
+type Story = StoryObj<EpUserBadgeArgs>;
 
 export const Default: Story = {
-  render: (args) => html`
+  render: (args: EpUserBadgeArgs) => html`
     <ep-user-badge
       name="${args.name}"
       color="${args.color}"
@@ -34,7 +41,7 @@ export const Default: Story = {
     ></ep-user-badge>
   `,
   play: async ({ canvasElement }) => {
-    const host = canvasElement.querySelector('ep-user-badge')! as any;
+    const host = canvasElement.querySelector('ep-user-badge')!;
     await host.updateComplete;
     const avatar = host.shadowRoot!.querySelector('.avatar');
     const nameEl = host.shadowRoot!.querySelector('.name');
@@ -47,7 +54,7 @@ export const Default: Story = {
 
 export const Online: Story = {
   args: { name: 'Alice', color: '#e57373', online: true },
-  render: (args) => html`
+  render: (args: EpUserBadgeArgs) => html`
     <ep-user-badge name="${args.name}" color="${args.color}" online></ep-user-badge>
   `,
   play: async ({ canvasElement }) => {
@@ -70,7 +77,7 @@ export const UserList: Story = {
     await expect(badges.length).toBe(4);
 
     // Check initials
-    await Promise.all(Array.from(badges).map((b: any) => b.updateComplete));
+    await Promise.all(Array.from(badges).map(b => b.updateComplete));
     const initials = Array.from(badges).map(
       b => b.shadowRoot!.querySelector('.avatar')!.textContent!.trim()
     );

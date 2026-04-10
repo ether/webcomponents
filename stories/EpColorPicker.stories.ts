@@ -1,9 +1,14 @@
 import { html } from 'lit';
 import type { Meta, StoryObj } from '@storybook/web-components';
-import { expect, userEvent, fn, waitFor } from 'storybook/test';
+import { expect, userEvent, fn } from 'storybook/test';
 import '../src/EpColorPicker.js';
 
-const meta: Meta = {
+type EpColorPickerArgs = {
+  colors: string[];
+  value: string;
+};
+
+const meta: Meta<EpColorPickerArgs> = {
   title: 'Components/EpColorPicker',
   component: 'ep-color-picker',
   argTypes: {
@@ -18,14 +23,14 @@ const meta: Meta = {
 
 export default meta;
 
-type Story = StoryObj;
+type Story = StoryObj<EpColorPickerArgs>;
 
 export const Default: Story = {
-  render: (args) => html`
+  render: (args: EpColorPickerArgs) => html`
     <ep-color-picker .colors="${args.colors}" .value="${args.value}"></ep-color-picker>
   `,
   play: async ({ canvasElement }) => {
-    const host = canvasElement.querySelector('ep-color-picker')! as any;
+    const host = canvasElement.querySelector('ep-color-picker')!;
     await host.updateComplete;
     const swatches = host.shadowRoot!.querySelectorAll('.swatch');
     await expect(swatches.length).toBe(12);
@@ -37,7 +42,7 @@ export const SelectColor: Story = {
     <ep-color-picker .colors="${['red', 'green', 'blue']}"></ep-color-picker>
   `,
   play: async ({ canvasElement }) => {
-    const host = canvasElement.querySelector('ep-color-picker')! as any;
+    const host = canvasElement.querySelector('ep-color-picker')!;
     await host.updateComplete;
     const handler = fn();
     host.addEventListener('ep-color-select', handler);
@@ -53,11 +58,11 @@ export const SelectColor: Story = {
 
 export const WithPreselection: Story = {
   args: { value: 'blue' },
-  render: (args) => html`
+  render: (args: EpColorPickerArgs) => html`
     <ep-color-picker .colors="${args.colors}" .value="${args.value}"></ep-color-picker>
   `,
   play: async ({ canvasElement }) => {
-    const host = canvasElement.querySelector('ep-color-picker')! as any;
+    const host = canvasElement.querySelector('ep-color-picker')!;
     await host.updateComplete;
     await expect(host.value).toBe('blue');
 
@@ -69,11 +74,11 @@ export const WithPreselection: Story = {
 
 export const FewColors: Story = {
   args: { colors: ['#ff0000', '#00ff00', '#0000ff'] },
-  render: (args) => html`
+  render: (args: EpColorPickerArgs) => html`
     <ep-color-picker .colors="${args.colors}"></ep-color-picker>
   `,
   play: async ({ canvasElement }) => {
-    const host = canvasElement.querySelector('ep-color-picker')! as any;
+    const host = canvasElement.querySelector('ep-color-picker')!;
     await host.updateComplete;
     const swatches = host.shadowRoot!.querySelectorAll('.swatch');
     await expect(swatches.length).toBe(3);

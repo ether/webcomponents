@@ -3,7 +3,13 @@ import type { Meta, StoryObj } from '@storybook/web-components';
 import { expect, userEvent, fn } from 'storybook/test';
 import '../src/EpButton.js';
 
-const meta: Meta = {
+type EpButtonArgs = {
+  variant: 'default' | 'primary' | 'ghost' | 'icon';
+  size: 'small' | 'medium' | 'large';
+  disabled: boolean;
+};
+
+const meta: Meta<EpButtonArgs> = {
   title: 'Components/EpButton',
   component: 'ep-button',
   argTypes: {
@@ -20,17 +26,17 @@ const meta: Meta = {
 
 export default meta;
 
-type Story = StoryObj;
+type Story = StoryObj<EpButtonArgs>;
 
-async function getButton(canvasElement: HTMLElement): Promise<{ host: HTMLElement; button: HTMLButtonElement }> {
-  const host = canvasElement.querySelector('ep-button')! as any;
+async function getButton(canvasElement: HTMLElement) {
+  const host = canvasElement.querySelector('ep-button')!;
   await host.updateComplete;
   const button = host.shadowRoot!.querySelector('button')!;
   return { host, button };
 }
 
 export const Default: Story = {
-  render: (args) => html`
+  render: (args: EpButtonArgs) => html`
     <ep-button variant="${args.variant}" size="${args.size}" ?disabled="${args.disabled}">
       Button
     </ep-button>
@@ -44,7 +50,7 @@ export const Default: Story = {
 
 export const Primary: Story = {
   args: { variant: 'primary' },
-  render: (args) => html`
+  render: (args: EpButtonArgs) => html`
     <ep-button variant="${args.variant}">Save changes</ep-button>
   `,
   play: async ({ canvasElement }) => {
@@ -55,7 +61,7 @@ export const Primary: Story = {
 
 export const PrimaryScreamingCase: Story = {
   args: { variant: 'primary' },
-  render: (args) => html`
+  render: (args: EpButtonArgs) => html`
     <ep-button variant="${args.variant}" uppercase>Save changes</ep-button>
   `,
   play: async ({ canvasElement }) => {
@@ -66,7 +72,7 @@ export const PrimaryScreamingCase: Story = {
 
 export const Ghost: Story = {
   args: { variant: 'ghost' },
-  render: (args) => html`
+  render: (args: EpButtonArgs) => html`
     <ep-button variant="${args.variant}">Cancel</ep-button>
   `,
 };
@@ -120,7 +126,7 @@ export const Sizes: Story = {
 
 export const Disabled: Story = {
   args: { disabled: true, variant: 'primary' },
-  render: (args) => html`
+  render: (args: EpButtonArgs) => html`
     <ep-button variant="${args.variant}" ?disabled="${args.disabled}">Disabled</ep-button>
   `,
   play: async ({ canvasElement }) => {

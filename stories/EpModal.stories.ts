@@ -1,10 +1,14 @@
 import { html } from 'lit';
 import type { Meta, StoryObj } from '@storybook/web-components';
 import { expect, userEvent, waitFor } from 'storybook/test';
-import type { EpModal } from '../src/EpModal.js';
 import '../src/EpModal.js';
 
-const meta: Meta = {
+type EpModalArgs = {
+  modalTitle: string;
+  open: boolean;
+};
+
+const meta: Meta<EpModalArgs> = {
   title: 'Components/EpModal',
   component: 'ep-modal',
   argTypes: {
@@ -19,17 +23,17 @@ const meta: Meta = {
 
 export default meta;
 
-type Story = StoryObj;
+type Story = StoryObj<EpModalArgs>;
 
-async function getModal(canvasElement: HTMLElement): Promise<EpModal> {
+async function getModal(canvasElement: HTMLElement) {
   await customElements.whenDefined('ep-modal');
-  const modal = canvasElement.querySelector('ep-modal')! as EpModal;
+  const modal = canvasElement.querySelector('ep-modal')!;
   await modal.updateComplete;
   return modal;
 }
 
 export const Default: Story = {
-  render: (args) => html`
+  render: (args: EpModalArgs) => html`
     <ep-modal modal-title="${args.modalTitle}" ?open="${args.open}">
       <p style="margin: 0;">This is the modal body content.</p>
     </ep-modal>
@@ -76,7 +80,7 @@ export const CloseOnEscape: Story = {
     await expect(modal.hasAttribute('open')).toBe(true);
 
     // Focus the dialog so keyboard events reach it
-    const dialog = modal.renderRoot?.querySelector<HTMLElement>('.dialog');
+    const dialog = modal.renderRoot?.querySelector('.dialog');
     dialog?.focus();
 
     await userEvent.keyboard('{Escape}');
@@ -94,7 +98,7 @@ export const CloseButton: Story = {
     const modal = await getModal(canvasElement);
     await expect(modal.hasAttribute('open')).toBe(true);
 
-    const closeBtn = modal.renderRoot?.querySelector('.close-btn') as HTMLElement;
+    const closeBtn = modal.renderRoot.querySelector('.close-btn')!;
     await expect(closeBtn).not.toBe(null);
     await userEvent.click(closeBtn);
     await waitFor(() => expect(modal.hasAttribute('open')).toBe(false));

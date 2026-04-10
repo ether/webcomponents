@@ -3,13 +3,19 @@ import type { Meta, StoryObj } from '@storybook/web-components';
 import { expect, waitFor } from 'storybook/test';
 import { EpNotification } from '../src/EpNotification.js';
 
+type EpNotificationArgs = {
+  type: 'info' | 'success' | 'error';
+  position: 'top' | 'bottom';
+  duration: number;
+};
+
 // Clean up leaked notifications between tests
 function cleanup() {
   document.querySelectorAll('ep-notification').forEach(el => el.remove());
   document.querySelectorAll('[id^="ep-notification-container"]').forEach(el => el.remove());
 }
 
-const meta: Meta = {
+const meta: Meta<EpNotificationArgs> = {
   title: 'Components/EpNotification',
   component: 'ep-notification',
   argTypes: {
@@ -21,7 +27,7 @@ const meta: Meta = {
 
 export default meta;
 
-type Story = StoryObj;
+type Story = StoryObj<EpNotificationArgs>;
 
 export const Success: Story = {
   render: () => html`<div>Success notification test</div>`,
@@ -34,7 +40,7 @@ export const Success: Story = {
       expect(n).not.toBe(null);
     });
 
-    const n = document.querySelector('ep-notification')! as EpNotification;
+    const n = document.querySelector('ep-notification')!;
     await expect(n.type).toBe('success');
     cleanup();
   },
@@ -51,7 +57,7 @@ export const Error: Story = {
       expect(n).not.toBe(null);
     });
 
-    const n = document.querySelector('ep-notification')! as EpNotification;
+    const n = document.querySelector('ep-notification')!;
     await expect(n.type).toBe('error');
     cleanup();
   },
@@ -62,7 +68,7 @@ export const Dismiss: Story = {
   play: async () => {
     cleanup();
     const notification = EpNotification.show({ text: 'Dismiss test', duration: 0 });
-    await (notification as any).updateComplete;
+    await notification.updateComplete;
 
     // Verify the removing attribute gets set on dismiss
     notification.dismiss();

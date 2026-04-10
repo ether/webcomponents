@@ -3,7 +3,14 @@ import type { Meta, StoryObj } from '@storybook/web-components';
 import { expect } from 'storybook/test';
 import '../src/EpChatMessage.js';
 
-const meta: Meta = {
+type EpChatMessageArgs = {
+  author: string;
+  authorColor: string;
+  time: string;
+  own: boolean;
+};
+
+const meta: Meta<EpChatMessageArgs> = {
   title: 'Components/EpChatMessage',
   component: 'ep-chat-message',
   argTypes: {
@@ -22,10 +29,10 @@ const meta: Meta = {
 
 export default meta;
 
-type Story = StoryObj;
+type Story = StoryObj<EpChatMessageArgs>;
 
 export const Default: Story = {
-  render: (args) => html`
+  render: (args: EpChatMessageArgs) => html`
     <ep-chat-message
       author="${args.author}"
       author-color="${args.authorColor}"
@@ -35,7 +42,7 @@ export const Default: Story = {
     </ep-chat-message>
   `,
   play: async ({ canvasElement }) => {
-    const host = canvasElement.querySelector('ep-chat-message')! as any;
+    const host = canvasElement.querySelector('ep-chat-message')!;
     await host.updateComplete;
     const author = host.shadowRoot!.querySelector('.author');
     const time = host.shadowRoot!.querySelector('.time');
@@ -47,7 +54,7 @@ export const Default: Story = {
 
 export const OwnMessage: Story = {
   args: { author: 'You', authorColor: '#64b5f6', own: true },
-  render: (args) => html`
+  render: (args: EpChatMessageArgs) => html`
     <ep-chat-message author="${args.author}" author-color="${args.authorColor}" time="14:33" own>
       Yes, looks good to me!
     </ep-chat-message>

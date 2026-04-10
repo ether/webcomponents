@@ -1,9 +1,17 @@
 import { html } from 'lit';
 import type { Meta, StoryObj } from '@storybook/web-components';
-import { expect, userEvent, within, fn, waitFor } from 'storybook/test';
+import { expect, userEvent, fn } from 'storybook/test';
 import '../src/EpInput.js';
 
-const meta: Meta = {
+type EpInputArgs = {
+  label: string;
+  placeholder: string;
+  type: 'text' | 'password' | 'email' | 'number' | 'textarea';
+  disabled: boolean;
+  error: boolean;
+};
+
+const meta: Meta<EpInputArgs> = {
   title: 'Components/EpInput',
   component: 'ep-input',
   argTypes: {
@@ -22,10 +30,10 @@ const meta: Meta = {
 
 export default meta;
 
-type Story = StoryObj;
+type Story = StoryObj<EpInputArgs>;
 
 export const Default: Story = {
-  render: (args) => html`
+  render: (args: EpInputArgs) => html`
     <ep-input
       label="${args.label}"
       placeholder="${args.placeholder}"
@@ -35,7 +43,7 @@ export const Default: Story = {
     ></ep-input>
   `,
   play: async ({ canvasElement }) => {
-    const host = canvasElement.querySelector('ep-input')! as any;
+    const host = canvasElement.querySelector('ep-input')!;
     await host.updateComplete;
     const input = host.shadowRoot!.querySelector('input')!;
 
@@ -49,7 +57,7 @@ export const Typing: Story = {
     <ep-input label="Name" placeholder="Type here..."></ep-input>
   `,
   play: async ({ canvasElement }) => {
-    const host = canvasElement.querySelector('ep-input')! as any;
+    const host = canvasElement.querySelector('ep-input')!;
     await host.updateComplete;
     const input = host.shadowRoot!.querySelector('input')!;
     const handler = fn();
@@ -67,7 +75,7 @@ export const WithHint: Story = {
     <ep-input label="Pad name" placeholder="my-document" hint="Only letters, numbers and dashes."></ep-input>
   `,
   play: async ({ canvasElement }) => {
-    const host = canvasElement.querySelector('ep-input')! as any;
+    const host = canvasElement.querySelector('ep-input')!;
     await host.updateComplete;
     const hint = host.shadowRoot!.querySelector('.hint');
     await expect(hint).not.toBe(null);
@@ -81,7 +89,7 @@ export const WithError: Story = {
               error error-text="Please enter a valid email."></ep-input>
   `,
   play: async ({ canvasElement }) => {
-    const host = canvasElement.querySelector('ep-input')! as any;
+    const host = canvasElement.querySelector('ep-input')!;
     await host.updateComplete;
     const errorEl = host.shadowRoot!.querySelector('.error-text');
     await expect(errorEl).not.toBe(null);
@@ -94,7 +102,7 @@ export const Textarea: Story = {
     <ep-input label="Description" type="textarea" placeholder="Write something..."></ep-input>
   `,
   play: async ({ canvasElement }) => {
-    const host = canvasElement.querySelector('ep-input')! as any;
+    const host = canvasElement.querySelector('ep-input')!;
     await host.updateComplete;
     const textarea = host.shadowRoot!.querySelector('textarea');
     await expect(textarea).not.toBe(null);
@@ -106,7 +114,7 @@ export const Disabled: Story = {
     <ep-input label="Read-only" value="Cannot edit" disabled></ep-input>
   `,
   play: async ({ canvasElement }) => {
-    const host = canvasElement.querySelector('ep-input')! as any;
+    const host = canvasElement.querySelector('ep-input')!;
     await host.updateComplete;
     const input = host.shadowRoot!.querySelector('input')!;
     await expect(input).toBeDisabled();

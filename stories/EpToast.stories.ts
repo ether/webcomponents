@@ -3,12 +3,16 @@ import type { Meta, StoryObj } from '@storybook/web-components';
 import { expect, waitFor } from 'storybook/test';
 import { EpToastContainer } from '../src/EpToast.js';
 
+type EpToastArgs = {
+  position: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
+};
+
 function cleanup() {
   document.querySelectorAll('ep-toast-container').forEach(el => el.remove());
   document.querySelectorAll('ep-toast-item').forEach(el => el.remove());
 }
 
-const meta: Meta = {
+const meta: Meta<EpToastArgs> = {
   title: 'Components/EpToast',
   component: 'ep-toast-container',
   argTypes: {
@@ -21,7 +25,7 @@ const meta: Meta = {
 
 export default meta;
 
-type Story = StoryObj;
+type Story = StoryObj<EpToastArgs>;
 
 export const Default: Story = {
   render: () => html`
@@ -41,7 +45,7 @@ export const Default: Story = {
       expect(toast).not.toBe(null);
     });
 
-    const toast = document.querySelector('ep-toast-item')! as any;
+    const toast = document.querySelector('ep-toast-item')!;
     await expect(toast.type).toBe('success');
     await expect(toast.message).toBe('Test toast!');
     cleanup();
@@ -70,7 +74,7 @@ export const DismissToast: Story = {
     cleanup();
     const container = EpToastContainer.getInstance();
     const toast = container.addToast({ message: 'Dismiss me', type: 'info', duration: 0 });
-    await (toast as any).updateComplete;
+    await toast.updateComplete;
 
     toast.dismiss();
     await expect(toast.hasAttribute('removing')).toBe(true);

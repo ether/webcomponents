@@ -1,12 +1,29 @@
 import { html } from 'lit';
 import type { Meta, StoryObj } from '@storybook/web-components';
-import { expect, userEvent, fn, waitFor } from 'storybook/test';
+import { expect, fn, waitFor } from 'storybook/test';
 import '../src/EpColorWheel.js';
-import type { EpColorWheel } from '../src/EpColorWheel.js';
 
-async function ready(canvasElement: HTMLElement): Promise<EpColorWheel> {
+type EpColorWheelArgs = {
+  size: number;
+  value: string;
+  showInput: boolean;
+};
+
+function getCanvas(host: Element, selector: string): HTMLCanvasElement {
+  const el = host.querySelector(selector);
+  if (!(el instanceof HTMLCanvasElement)) throw new Error(`Expected canvas: ${selector}`);
+  return el;
+}
+
+function getInput(host: Element, selector: string): HTMLInputElement {
+  const el = host.querySelector(selector);
+  if (!(el instanceof HTMLInputElement)) throw new Error(`Expected input: ${selector}`);
+  return el;
+}
+
+async function ready(canvasElement: HTMLElement) {
   await customElements.whenDefined('ep-color-wheel');
-  const host = canvasElement.querySelector('ep-color-wheel')! as EpColorWheel;
+  const host = canvasElement.querySelector('ep-color-wheel')!;
   // Wait until shadow root exists
   await waitFor(() => {
     if (!host.shadowRoot) throw new Error('No shadow root yet');
@@ -15,7 +32,7 @@ async function ready(canvasElement: HTMLElement): Promise<EpColorWheel> {
   return host;
 }
 
-const meta: Meta = {
+const meta: Meta<EpColorWheelArgs> = {
   title: 'Components/EpColorWheel',
   component: 'ep-color-wheel',
   argTypes: {
@@ -32,10 +49,10 @@ const meta: Meta = {
 
 export default meta;
 
-type Story = StoryObj;
+type Story = StoryObj<EpColorWheelArgs>;
 
 export const Default: Story = {
-  render: (args) => html`
+  render: (args: EpColorWheelArgs) => html`
     <ep-color-wheel
       size="${args.size}"
       value="${args.value}"
@@ -45,8 +62,8 @@ export const Default: Story = {
   play: async ({ canvasElement }) => {
     const host = await ready(canvasElement);
 
-    const mask = host.shadowRoot!.querySelector('.mask') as HTMLCanvasElement;
-    const overlay = host.shadowRoot!.querySelector('.overlay') as HTMLCanvasElement;
+    const mask = getCanvas(host.shadowRoot!, '.mask');
+    const overlay = getCanvas(host.shadowRoot!, '.overlay');
     await expect(mask).not.toBe(null);
     await expect(overlay).not.toBe(null);
     await expect(mask.width).toBe(200);
@@ -55,7 +72,7 @@ export const Default: Story = {
     const solid = host.shadowRoot!.querySelector('.solid');
     await expect(solid).not.toBe(null);
 
-    const input = host.shadowRoot!.querySelector('.hex-input') as HTMLInputElement;
+    const input = getInput(host.shadowRoot!, '.hex-input');
     await expect(input).not.toBe(null);
     await expect(input.value.toLowerCase()).toBe('#485365');
   },
@@ -91,7 +108,7 @@ export const HexInputChange: Story = {
     const handler = fn();
     host.addEventListener('ep-color-change', handler);
 
-    const input = host.shadowRoot!.querySelector('.hex-input') as HTMLInputElement;
+    const input = getInput(host.shadowRoot!, '.hex-input');
 
     // Set value programmatically (userEvent.clear doesn't work on shadow DOM inputs)
     input.value = '#ff0000';
@@ -114,7 +131,7 @@ export const ClickOnWheel: Story = {
     const handler = fn();
     host.addEventListener('ep-color-change', handler);
 
-    const overlay = host.shadowRoot!.querySelector('.overlay') as HTMLCanvasElement;
+    const overlay = getCanvas(host.shadowRoot!, '.overlay');
     const rect = overlay.getBoundingClientRect();
 
     const centerX = rect.left + rect.width / 2;
@@ -146,7 +163,7 @@ export const ClickOnSquare: Story = {
     const handler = fn();
     host.addEventListener('ep-color-change', handler);
 
-    const overlay = host.shadowRoot!.querySelector('.overlay') as HTMLCanvasElement;
+    const overlay = getCanvas(host.shadowRoot!, '.overlay');
     const rect = overlay.getBoundingClientRect();
     const center = rect.left + rect.width / 2;
     const middle = rect.top + rect.height / 2;
@@ -167,7 +184,7 @@ export const ClickOnSquare: Story = {
 
 export const WithoutInput: Story = {
   args: { showInput: false },
-  render: (args) => html`
+  render: (args: EpColorWheelArgs) => html`
     <ep-color-wheel size="${args.size}" value="${args.value}" .showInput="${false}"></ep-color-wheel>
   `,
   play: async ({ canvasElement }) => {
@@ -179,24 +196,24 @@ export const WithoutInput: Story = {
 
 export const SmallSize: Story = {
   args: { size: 140 },
-  render: (args) => html`
+  render: (args: EpColorWheelArgs) => html`
     <ep-color-wheel size="${args.size}" value="#64d29b"></ep-color-wheel>
   `,
   play: async ({ canvasElement }) => {
     const host = await ready(canvasElement);
-    const mask = host.shadowRoot!.querySelector('.mask') as HTMLCanvasElement;
+    const mask = getCanvas(host.shadowRoot!, '.mask');
     await expect(mask.width).toBe(140);
   },
 };
 
 export const LargeSize: Story = {
   args: { size: 320 },
-  render: (args) => html`
+  render: (args: EpColorWheelArgs) => html`
     <ep-color-wheel size="${args.size}" value="#c47a4a"></ep-color-wheel>
   `,
   play: async ({ canvasElement }) => {
     const host = await ready(canvasElement);
-    const mask = host.shadowRoot!.querySelector('.mask') as HTMLCanvasElement;
+    const mask = getCanvas(host.shadowRoot!, '.mask');
     await expect(mask.width).toBe(320);
   },
 };

@@ -1,10 +1,15 @@
 import { html } from 'lit';
 import type { Meta, StoryObj } from '@storybook/web-components';
-import { expect, userEvent, fn, waitFor } from 'storybook/test';
+import { expect, userEvent, fn } from 'storybook/test';
 import '../src/EpDropdown.js';
 import '../src/EpDropdownItem.js';
 
-const meta: Meta = {
+type EpDropdownArgs = {
+  trigger: 'click' | 'hover';
+  align: 'left' | 'right';
+};
+
+const meta: Meta<EpDropdownArgs> = {
   title: 'Components/EpDropdown',
   component: 'ep-dropdown',
   argTypes: {
@@ -19,10 +24,10 @@ const meta: Meta = {
 
 export default meta;
 
-type Story = StoryObj;
+type Story = StoryObj<EpDropdownArgs>;
 
 export const Default: Story = {
-  render: (args) => html`
+  render: (args: EpDropdownArgs) => html`
     <ep-dropdown trigger="${args.trigger}" align="${args.align}">
       <button slot="trigger" style="padding: 8px 16px; cursor: pointer;">
         Choose option
@@ -35,14 +40,14 @@ export const Default: Story = {
     </ep-dropdown>
   `,
   play: async ({ canvasElement }) => {
-    const dropdown = canvasElement.querySelector('ep-dropdown')! as any;
+    const dropdown = canvasElement.querySelector('ep-dropdown')!;
     await dropdown.updateComplete;
 
     // Initially closed
     await expect(dropdown.open).toBe(false);
 
     // Click to open — trigger button is in light DOM (slotted)
-    const trigger = canvasElement.querySelector('[slot="trigger"]')! as HTMLElement;
+    const trigger = canvasElement.querySelector('[slot="trigger"]')!;
     await userEvent.click(trigger);
     await expect(dropdown.open).toBe(true);
 
@@ -65,18 +70,18 @@ export const SelectItem: Story = {
     </ep-dropdown>
   `,
   play: async ({ canvasElement }) => {
-    const dropdown = canvasElement.querySelector('ep-dropdown')! as any;
+    const dropdown = canvasElement.querySelector('ep-dropdown')!;
     await dropdown.updateComplete;
     const handler = fn();
     dropdown.addEventListener('ep-dropdown-select', handler);
 
     // Open
-    const trigger = canvasElement.querySelector('[slot="trigger"]')! as HTMLElement;
+    const trigger = canvasElement.querySelector('[slot="trigger"]')!;
     await userEvent.click(trigger);
     await expect(dropdown.open).toBe(true);
 
     // Select item
-    const betaItem = canvasElement.querySelector('ep-dropdown-item[value="beta"]')! as HTMLElement;
+    const betaItem = canvasElement.querySelector('ep-dropdown-item[value="beta"]')!;
     await userEvent.click(betaItem);
 
     await expect(handler).toHaveBeenCalledTimes(1);
@@ -100,14 +105,14 @@ export const WithDisabledItem: Story = {
     </ep-dropdown>
   `,
   play: async ({ canvasElement }) => {
-    const disabledItem = canvasElement.querySelector('ep-dropdown-item[disabled]')! as any;
-    await expect(disabledItem.disabled).toBe(true);
+    const disabledItem = canvasElement.querySelector('ep-dropdown-item[disabled]')!;
+    await expect(disabledItem.hasAttribute('disabled')).toBe(true);
   },
 };
 
 export const HoverTrigger: Story = {
   args: { trigger: 'hover' },
-  render: (args) => html`
+  render: (args: EpDropdownArgs) => html`
     <ep-dropdown trigger="${args.trigger}">
       <button slot="trigger" style="padding: 8px 16px; cursor: pointer;">
         Hover me

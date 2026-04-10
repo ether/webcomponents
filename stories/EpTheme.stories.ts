@@ -1,6 +1,6 @@
 import { html } from 'lit';
 import type { Meta, StoryObj } from '@storybook/web-components';
-import { expect, within } from 'storybook/test';
+import { expect } from 'storybook/test';
 import { themes, EpTheme } from '../src/EpTheme.js';
 import '../src/EpButton.js';
 import '../src/EpCard.js';
@@ -13,9 +13,13 @@ import '../src/EpColorPicker.js';
 import '../src/EpDropdown.js';
 import '../src/EpDropdownItem.js';
 
-const themeNames = Object.keys(themes);
+type EpThemeArgs = {
+  name: keyof typeof themes;
+};
 
-const meta: Meta = {
+const themeNames: EpThemeArgs['name'][] = ['colibris', 'colibris-dark', 'high-contrast', 'warm'];
+
+const meta: Meta<EpThemeArgs> = {
   title: 'Theme/EpTheme',
   component: 'ep-theme',
   argTypes: {
@@ -28,10 +32,10 @@ const meta: Meta = {
 
 export default meta;
 
-type Story = StoryObj;
+type Story = StoryObj<EpThemeArgs>;
 
 export const Showcase: Story = {
-  render: (args) => html`
+  render: (args: EpThemeArgs) => html`
     <ep-theme name="${args.name}">
       <div style="padding: 24px; background: var(--bg-color); min-height: 100vh;">
 
@@ -120,7 +124,7 @@ export const Showcase: Story = {
     </ep-theme>
   `,
   play: async ({ canvasElement }) => {
-    const theme = canvasElement.querySelector('ep-theme')! as EpTheme;
+    const theme = canvasElement.querySelector('ep-theme')!;
     await expect(theme.name).toBe('colibris');
 
     // Verify CSS variables are applied
@@ -189,26 +193,27 @@ export const ThemeSwitching: Story = {
     </div>
   `,
   play: async ({ canvasElement }) => {
-    const theme = canvasElement.querySelector('#switchable-theme')! as EpTheme;
+    const theme = canvasElement.querySelector('ep-theme#switchable-theme')!;
     await expect(theme.name).toBe('colibris');
 
     // Wire up the buttons
     const buttons = canvasElement.querySelectorAll('.theme-switch');
     buttons.forEach(btn => {
+      if (!(btn instanceof HTMLButtonElement)) return;
       btn.addEventListener('click', () => {
-        theme.name = (btn as HTMLElement).dataset.theme!;
+        theme.name = btn.dataset.theme!;
       });
     });
 
     // Switch to dark
     theme.name = 'colibris-dark';
-    await (theme as any).updateComplete;
+    await theme.updateComplete;
     await expect(theme.name).toBe('colibris-dark');
     await expect(getComputedStyle(theme).getPropertyValue('--bg-color').trim()).toBe('#2c3143');
 
     // Switch back
     theme.name = 'colibris';
-    await (theme as any).updateComplete;
+    await theme.updateComplete;
     await expect(getComputedStyle(theme).getPropertyValue('--bg-color').trim()).toBe('white');
   },
 };
@@ -242,12 +247,12 @@ export const RegisterCustomTheme: Story = {
       '--main-font-family': '"SF Mono", Menlo, monospace',
     });
 
-    const theme = canvasElement.querySelector('#custom-theme')! as EpTheme;
+    const theme = canvasElement.querySelector('ep-theme#custom-theme')!;
     // Force re-apply: change to something else first, then back
     theme.name = 'colibris';
-    await (theme as any).updateComplete;
+    await theme.updateComplete;
     theme.name = 'custom-ocean';
-    await (theme as any).updateComplete;
+    await theme.updateComplete;
 
     await expect(getComputedStyle(theme).getPropertyValue('--bg-color').trim()).toBe('#0d1b2a');
     await expect(getComputedStyle(theme).getPropertyValue('--primary-color').trim()).toBe('#48b5c4');
@@ -256,7 +261,7 @@ export const RegisterCustomTheme: Story = {
 
 export const Colibris: Story = {
   args: { name: 'colibris' },
-  render: (args) => html`
+  render: (args: EpThemeArgs) => html`
     <ep-theme name="${args.name}">
       <div style="padding: 24px; background: var(--bg-color);">
         <ep-card card-title="Colibris (Default)">
@@ -272,7 +277,7 @@ export const Colibris: Story = {
 
 export const ColibrisDark: Story = {
   args: { name: 'colibris-dark' },
-  render: (args) => html`
+  render: (args: EpThemeArgs) => html`
     <ep-theme name="${args.name}">
       <div style="padding: 24px; background: var(--bg-color);">
         <ep-card card-title="Colibris Dark">
@@ -288,7 +293,7 @@ export const ColibrisDark: Story = {
 
 export const HighContrast: Story = {
   args: { name: 'high-contrast' },
-  render: (args) => html`
+  render: (args: EpThemeArgs) => html`
     <ep-theme name="${args.name}">
       <div style="padding: 24px; background: var(--bg-color);">
         <ep-card card-title="High Contrast">
@@ -304,7 +309,7 @@ export const HighContrast: Story = {
 
 export const Warm: Story = {
   args: { name: 'warm' },
-  render: (args) => html`
+  render: (args: EpThemeArgs) => html`
     <ep-theme name="${args.name}">
       <div style="padding: 24px; background: var(--bg-color);">
         <ep-card card-title="Warm">

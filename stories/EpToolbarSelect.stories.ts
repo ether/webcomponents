@@ -1,9 +1,15 @@
 import { html } from 'lit';
 import type { Meta, StoryObj } from '@storybook/web-components';
-import { expect, fn, waitFor } from 'storybook/test';
+import { expect, fn } from 'storybook/test';
 import '../src/EpToolbarSelect.js';
 
-const meta: Meta = {
+type EpToolbarSelectArgs = {
+  label: string;
+  placeholder: string;
+  value: string;
+};
+
+const meta: Meta<EpToolbarSelectArgs> = {
   title: 'Components/EpToolbarSelect',
   component: 'ep-toolbar-select',
   argTypes: {
@@ -30,10 +36,10 @@ const fontSizes = [
   { label: '24px', value: '24' },
 ];
 
-type Story = StoryObj;
+type Story = StoryObj<EpToolbarSelectArgs>;
 
 export const Default: Story = {
-  render: (args) => html`
+  render: (args: EpToolbarSelectArgs) => html`
     <ep-toolbar-select
       label="${args.label}"
       placeholder="${args.placeholder}"
@@ -42,7 +48,7 @@ export const Default: Story = {
     ></ep-toolbar-select>
   `,
   play: async ({ canvasElement }) => {
-    const host = canvasElement.querySelector('ep-toolbar-select')! as any;
+    const host = canvasElement.querySelector('ep-toolbar-select')!;
     await host.updateComplete;
     const dropdown = host.shadowRoot!.querySelector('ep-dropdown');
     await expect(dropdown).not.toBe(null);
@@ -54,7 +60,7 @@ export const Default: Story = {
 
 export const WithPreselection: Story = {
   args: { value: '14' },
-  render: (args) => html`
+  render: (args: EpToolbarSelectArgs) => html`
     <ep-toolbar-select
       label="Font Size"
       .options="${fontSizes}"
@@ -62,7 +68,7 @@ export const WithPreselection: Story = {
     ></ep-toolbar-select>
   `,
   play: async ({ canvasElement }) => {
-    const host = canvasElement.querySelector('ep-toolbar-select')! as any;
+    const host = canvasElement.querySelector('ep-toolbar-select')!;
     await host.updateComplete;
     await expect(host.value).toBe('14');
 
@@ -76,7 +82,7 @@ export const ChangeEvent: Story = {
     <ep-toolbar-select label="Size" placeholder="Pick" .options="${fontSizes}"></ep-toolbar-select>
   `,
   play: async ({ canvasElement }) => {
-    const host = canvasElement.querySelector('ep-toolbar-select')! as any;
+    const host = canvasElement.querySelector('ep-toolbar-select')!;
     await host.updateComplete;
     const handler = fn();
     host.addEventListener('ep-toolbar-select:change', handler);

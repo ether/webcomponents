@@ -4,7 +4,14 @@ import { expect } from 'storybook/test';
 import '../src/EpCard.js';
 import '../src/EpButton.js';
 
-const meta: Meta = {
+type EpCardArgs = {
+  cardTitle: string;
+  subtitle: string;
+  bordered: boolean;
+  compact: boolean;
+};
+
+const meta: Meta<EpCardArgs> = {
   title: 'Components/EpCard',
   component: 'ep-card',
   argTypes: {
@@ -23,10 +30,10 @@ const meta: Meta = {
 
 export default meta;
 
-type Story = StoryObj;
+type Story = StoryObj<EpCardArgs>;
 
 export const Default: Story = {
-  render: (args) => html`
+  render: (args: EpCardArgs) => html`
     <ep-card card-title="${args.cardTitle}" subtitle="${args.subtitle}"
              ?bordered="${args.bordered}" ?compact="${args.compact}">
       <p style="margin: 0;">This is the card body content.</p>
@@ -37,7 +44,7 @@ export const Default: Story = {
     </ep-card>
   `,
   play: async ({ canvasElement }) => {
-    const host = canvasElement.querySelector('ep-card')! as any;
+    const host = canvasElement.querySelector('ep-card')!;
     await host.updateComplete;
     const title = host.shadowRoot!.querySelector('.title');
     await expect(title).not.toBe(null);
@@ -51,7 +58,7 @@ export const Default: Story = {
 
 export const Bordered: Story = {
   args: { bordered: true, cardTitle: 'Import / Export' },
-  render: (args) => html`
+  render: (args: EpCardArgs) => html`
     <ep-card card-title="${args.cardTitle}" bordered>
       <p style="margin: 0;">Export your pad as HTML, plain text, or Word document.</p>
     </ep-card>
@@ -64,7 +71,7 @@ export const Bordered: Story = {
 
 export const Compact: Story = {
   args: { compact: true, cardTitle: 'Quick note' },
-  render: (args) => html`
+  render: (args: EpCardArgs) => html`
     <ep-card card-title="${args.cardTitle}" compact bordered>
       <p style="margin: 0;">A compact card variant.</p>
     </ep-card>
@@ -82,7 +89,7 @@ export const NoTitle: Story = {
     </ep-card>
   `,
   play: async ({ canvasElement }) => {
-    const host = canvasElement.querySelector('ep-card')! as any;
+    const host = canvasElement.querySelector('ep-card')!;
     await host.updateComplete;
     const header = host.shadowRoot!.querySelector('.header');
     // No title/subtitle means no header rendered

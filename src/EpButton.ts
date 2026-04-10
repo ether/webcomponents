@@ -50,14 +50,18 @@ export class EpButton extends LitElement {
 
     /* Primary */
     :host([variant="primary"]) button {
-      background: var(--text-color, #485365);
+      background: var(--text-color, #586a69);
       color: var(--primary-color, #64d29b);
       border: 1px solid var(--text-color, #485365);
     }
 
+    :host([variant="primary"]) button:active {
+      box-shadow: var(--primary-button-active,inset 0 1px 12px rgba(0, 0, 0, 0.9));
+      background: var(--primary-button-active, #444);
+    }
+
     :host([variant="primary"]) button:hover {
-      background: var(--dark-color, #576273);
-      border-color: var(--dark-color, #576273);
+      background: var(--dark-color, #4a5d5c);
     }
 
     /* Ghost */
@@ -115,7 +119,7 @@ export class EpButton extends LitElement {
 
   render() {
     return html`
-      <button type="${this.type}" ?disabled="${this.disabled}">
+      <button part="button" type="${this.type}" ?disabled="${this.disabled}">
         <slot></slot>
       </button>
     `;

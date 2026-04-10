@@ -24,33 +24,50 @@ export class EpCheckbox extends LitElement {
 
     .track {
       position: relative;
-      width: 36px;
-      height: 20px;
       background: var(--middle-color, #d2d2d2);
       border-radius: 10px;
       transition: background 0.2s ease;
       flex-shrink: 0;
     }
-
-    :host([checked]) .track {
-      background: var(--text-color, #485365);
+    
+    :host([variant="default"]) .track {
+      width: 36px;
+      height: 20px;
+    }
+    
+    :host([variant="retro"]) .track {
+      width: 36px;
+      height: 10px;
     }
 
+    :host([checked]) .track {
+      background: var(--text-color, #64d29b);
+    }
+    
     .thumb {
       position: absolute;
-      top: 2px;
-      left: 2px;
+      top: 50%;
       width: 16px;
       height: 16px;
       border-radius: 50%;
       background: white;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
       transition: transform 0.2s ease;
+      transform: translateY(-50%);
+    }
+    
+    :host([variant="default"]) .thumb {
+      left: 2px;
     }
 
-    :host([checked]) .thumb {
-      transform: translateX(16px);
+    :host([variant="default"][checked]) .thumb {
+      transform: translate(16px, -50%);
     }
+
+    :host([variant="retro"][checked]) .thumb {
+      transform: translate(20px, -50%);
+    }
+    
 
     input {
       position: absolute;
@@ -75,6 +92,7 @@ export class EpCheckbox extends LitElement {
   `;
 
   @property({ type: Boolean, reflect: true }) checked = false;
+  @property({ reflect: true }) variant: 'default' | 'retro' = 'default';
   @property({ type: Boolean, reflect: true }) disabled = false;
   @property() label = '';
 
