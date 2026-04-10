@@ -1,6 +1,6 @@
 {
   "name": "etherpad-webcomponents",
-  "version": "v0.0.2",
+  "version": "0.0.3",
   "description": "Etherpad Web Components built with Lit",
   "type": "module",
   "main": "dist/index.js",
