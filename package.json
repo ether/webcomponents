@@ -7,7 +7,22 @@
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
-    ".": "./dist/index.js"
+    ".": "./dist/index.js",
+    "./EpButton.js": "./dist/EpButton.js",
+    "./EpCard.js": "./dist/EpCard.js",
+    "./EpChatMessage.js": "./dist/EpChatMessage.js",
+    "./EpCheckbox.js": "./dist/EpCheckbox.js",
+    "./EpColorPicker.js": "./dist/EpColorPicker.js",
+    "./EpColorWheel.js": "./dist/EpColorWheel.js",
+    "./EpDropdown.js": "./dist/EpDropdown.js",
+    "./EpDropdownItem.js": "./dist/EpDropdownItem.js",
+    "./EpInput.js": "./dist/EpInput.js",
+    "./EpModal.js": "./dist/EpModal.js",
+    "./EpNotification.js": "./dist/EpNotification.js",
+    "./EpToast.js": "./dist/EpToast.js",
+    "./EpToolbarSelect.js": "./dist/EpToolbarSelect.js",
+    "./EpUserBadge.js": "./dist/EpUserBadge.js",
+    "./EpTheme.js": "./dist/EpTheme.js"
   },
   "files": [
     "dist"
