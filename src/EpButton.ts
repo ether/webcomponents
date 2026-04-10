@@ -21,6 +21,9 @@ export class EpButton extends LitElement {
       border: none;
       outline: none;
       display: inline-flex;
+      width: 100%;
+      box-sizing: border-box;
+      justify-content: center;
       align-items: center;
       gap: 6px;
     }
@@ -37,14 +40,14 @@ export class EpButton extends LitElement {
 
     /* Default */
     :host([variant="default"]) button,
-    button {
+    :host(:not([variant])) button {
       background: transparent;
       color: var(--text-color, #485365);
       border: 1px solid var(--middle-color, #d2d2d2);
     }
 
     :host([variant="default"]) button:hover,
-    button:hover {
+    :host(:not([variant])) button:hover {
       background: var(--bg-soft-color, #f2f3f4);
     }
 
