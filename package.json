@@ -1,5 +1,5 @@
 {
-  "name": "ep-webcomponents",
+  "name": "etherpad-webcomponents",
   "version": "0.1.0",
   "description": "Etherpad Web Components built with Lit",
   "type": "module",
