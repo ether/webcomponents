@@ -14,3 +14,8 @@ export { EpToolbarSelect } from './EpToolbarSelect.js';
 export { EpUserBadge } from './EpUserBadge.js';
 export { EpTheme, themes } from './EpTheme.js';
 export type { ThemeTokens } from './EpTheme.js';
+export { EpEditor } from './EpEditor.js';
+export { AceEditor } from './editor/AceEditor.js';
+export type { AText } from './editor/types/AText.js';
+export type { Attribute } from './editor/types/Attribute.js';
+export { default as AttributePool } from './editor/AttributePool.js';

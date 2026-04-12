@@ -22,7 +22,11 @@
     "./EpToast.js": "./dist/EpToast.js",
     "./EpToolbarSelect.js": "./dist/EpToolbarSelect.js",
     "./EpUserBadge.js": "./dist/EpUserBadge.js",
-    "./EpTheme.js": "./dist/EpTheme.js"
+    "./EpTheme.js": "./dist/EpTheme.js",
+    "./EpEditor.js": "./dist/EpEditor.js",
+    "./editor/AceEditor.js": "./dist/editor/AceEditor.js",
+    "./editor/AttributePool.js": "./dist/editor/AttributePool.js",
+    "./editor/Changeset.js": "./dist/editor/Changeset.js"
   },
   "files": [
     "dist"
