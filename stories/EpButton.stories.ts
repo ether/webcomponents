@@ -134,3 +134,12 @@ export const Disabled: Story = {
     await expect(button.disabled).toBe(true);
   },
 };
+
+
+export const Bigger: Story = {
+  args: { disabled: false, variant: 'primary' },
+  render: (args: EpButtonArgs) => html`
+    <ep-button variant="${args.variant}" ?disabled="${args.disabled}" style="height: 50px;width: 300px">Disabled</ep-button>
+  `
+};
+

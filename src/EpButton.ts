@@ -42,7 +42,6 @@ export class EpButton extends LitElement {
     /* Default */
     :host([variant="default"]) button,
     :host(:not([variant])) button {
-      background: transparent;
       color: var(--text-color, #485365);
       border: 1px solid var(--middle-color, #d2d2d2);
     }
@@ -56,7 +55,8 @@ export class EpButton extends LitElement {
     :host([variant="primary"]) button {
       background: var(--text-color, #586a69);
       color: var(--primary-color, #64d29b);
-      border: 1px solid var(--text-color, #485365);
+      border: none;
+      transition: .2s background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
     }
 
     :host([variant="primary"]) button:active {
@@ -121,9 +121,16 @@ export class EpButton extends LitElement {
   @property({ type: Boolean, reflect: true }) disabled = false;
   @property() type: 'button' | 'submit' | 'reset' = 'button';
 
+  private _onClick() {
+    if (this.disabled || this.type !== 'submit') return;
+    const form = this.closest('form');
+    if (!form) return;
+    form.requestSubmit();
+  }
+
   render() {
     return html`
-      <button part="button" type="${this.type}" ?disabled="${this.disabled}">
+      <button part="button" type="${this.type}" ?disabled="${this.disabled}" @click="${this._onClick}">
         <slot></slot>
       </button>
     `;

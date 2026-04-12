@@ -6,7 +6,9 @@ export class EpInput extends LitElement {
   static styles = css`
     :host {
       --ep-font: var(--main-font-family, Quicksand, Cantarell, "Open Sans", "Helvetica Neue", sans-serif);
+      --ep-input-focus-border-color: var(--text-soft-color, #8a94a3);
       display: block;
+      box-sizing: border-box;
     }
 
     label {
@@ -21,7 +23,11 @@ export class EpInput extends LitElement {
     input, textarea {
       font-family: var(--ep-font);
       width: 100%;
+      height: 100%;
+      min-height: 0;
       box-sizing: border-box;
+      display: block;
+      margin: 0;
       padding: 8px 10px;
       border: 1px solid var(--middle-color, #d2d2d2);
       border-radius: 3px;
@@ -37,12 +43,11 @@ export class EpInput extends LitElement {
     }
 
     input:focus, textarea:focus {
-      border-color: var(--dark-color, #576273);
+      border-color: var(--ep-input-focus-border-color);
     }
 
     textarea {
       resize: vertical;
-      min-height: 80px;
     }
 
     :host([disabled]) input,
