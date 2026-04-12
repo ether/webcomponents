@@ -22,6 +22,7 @@ export class EpButton extends LitElement {
       outline: none;
       display: inline-flex;
       width: 100%;
+      height: 100%;
       box-sizing: border-box;
       justify-content: center;
       align-items: center;
