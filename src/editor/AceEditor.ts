@@ -480,7 +480,15 @@ export class AceEditor {
   // -----------------------------------------------------------------------
 
   setProperty(key: string, value: any): void {
-    switch (key) {
+    // The original ace2_inner editor lower-cases the key before dispatching,
+    // so callers can pass either 'userAuthor' or 'userauthor', 'rtlIsTrue'
+    // or 'rtlistrue'. Preserving that behavior here is critical: e.g.
+    // collab_client.ts calls setProperty('userAuthor', userId) — if this
+    // switch were case-sensitive it would silently ignore the call and
+    // every character the user typed would be attributed to the empty
+    // author string (no `author-*` class on rendered spans, no authorship
+    // coloring, no clearauthorship).
+    switch (key.toLowerCase()) {
       case 'wraps':
         this.setWraps(value);
         break;
@@ -499,7 +507,7 @@ export class AceEditor {
       case 'textface':
         this.targetBody.style.fontFamily = value || '';
         break;
-      case 'rtlIsTrue':
+      case 'rtlistrue':
         this.targetBody.dir = value ? 'rtl' : 'ltr';
         break;
       case 'showslinenumbers':
@@ -3036,12 +3044,12 @@ export class AceEditor {
           ? `indent${level}`
           : (t ? type + level : `${type}1`)]);
       } else {
+        // Scrap the entire indentation and list type.
         if (level === 1) {
-          this._setLineListType(n, '');
-        }
-        if (level > 1) {
-          this._setLineListType(n, '');
-          this._setLineListType(n, `indent${level}`);
+          mods.push([n, '']);
+        } else if (level > 1) {
+          mods.push([n, '']);
+          mods.push([n, `indent${level}`]);
         }
       }
     }
