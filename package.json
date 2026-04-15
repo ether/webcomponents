@@ -1,6 +1,6 @@
 {
   "name": "etherpad-webcomponents",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Etherpad Web Components built with Lit",
   "type": "module",
   "main": "dist/index.js",
@@ -45,7 +45,7 @@
     "type": "git",
     "url": "git+https://github.com/ether/webcomponents.git"
   },
-  "peerDependencies": {
+  "dependencies": {
     "@lit/reactive-element": "^2.1.2",
     "lit": "^3.3.2",
     "lit-element": "^4.2.2",
