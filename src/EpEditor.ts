@@ -242,15 +242,52 @@ export class EpEditor extends LitElement {
 
   /**
    * Prepares the user's pending changes as a changeset (for collaboration).
-   * Returns `{ changeset, pool }` or null if no changes.
+   * Returns `{ changeset, apool }` or null if no changes.
    */
-  prepareUserChangeset(): { changeset: string | null; pool: unknown } | null {
+  prepareUserChangeset(): { changeset: string | null; apool: unknown } | null {
     return this._editor?.prepareUserChangeset() ?? null;
   }
 
   /** Sets an author's display color. */
   setAuthorInfo(author: string, info: { bgcolor?: string }) {
     this._editor?.setAuthorInfo(author, info);
+  }
+
+  // ── Collaboration API ─────────────────────────────────────
+
+  /** Sets the base text for collaboration tracking. */
+  setBaseText(txt: string): void {
+    this._editor?.setBaseText(txt);
+  }
+
+  /** Sets the base attributed text from the server. */
+  setBaseAttributedText(atxt: { text: string; attribs: string }, apoolJsonObj?: unknown): void {
+    this._editor?.setBaseAttributedText(atxt, apoolJsonObj);
+  }
+
+  /** Applies remote changes to the base text. */
+  applyChangesToBase(c: string, optAuthor?: string, apoolJsonObj?: unknown): void {
+    this._editor?.applyChangesToBase(c, optAuthor, apoolJsonObj);
+  }
+
+  /** Commits prepared changeset to the base after server confirmation. */
+  applyPreparedChangesetToBase(): void {
+    this._editor?.applyPreparedChangesetToBase();
+  }
+
+  /** Registers a callback for when the user makes changes. */
+  setUserChangeNotificationCallback(f: () => void): void {
+    this._editor?.setUserChangeNotificationCallback(f);
+  }
+
+  /** Sets an editor property (wraps, showsauthorcolors, etc.). */
+  setProperty(key: string, value: unknown): void {
+    this._editor?.setProperty(key, value);
+  }
+
+  /** Returns the international composition state. */
+  getInInternationalComposition(): unknown {
+    return this._editor?.getInInternationalComposition() ?? null;
   }
 
   // ── Render ─────────────────────────────────────────────────

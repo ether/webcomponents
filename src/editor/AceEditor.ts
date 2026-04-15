@@ -59,6 +59,7 @@ import {SmartOpAssembler} from "./SmartOpAssembler.js";
 import Op from "./Op.js";
 import {buildKeepRange, buildKeepToStartOfRange, buildRemoveRange} from './ChangesetUtils.js';
 import {makeCSSManager} from './cssmanager.js';
+import {makeChangesetTracker} from './changesettracker.js';
 
 const isNodeText = Ace2Common.isNodeText;
 const getAssoc = Ace2Common.getAssoc;
@@ -109,6 +110,10 @@ export class AceEditor {
   private inInternationalComposition: any;
   private thisKeyDoesntTriggerNormalize: boolean;
   private authorInfos: Record<string, any>;
+  private changesetTracker: ReturnType<typeof makeChangesetTracker> | null = null;
+  private onKeyPressHandler: ((evt: Event) => void) | null = null;
+  private onKeyDownHandler: ((evt: Event) => void) | null = null;
+  private notifyDirtyHandler: (() => void) | null = null;
 
   // -----------------------------------------------------------------------
   // Constants
@@ -236,7 +241,34 @@ export class AceEditor {
       this.bindTheEventHandlers();
     });
 
-    editorBus.emit('editor:ace:initialized', {editorInfo: this});
+    // Initialize changeset tracker for collaboration support
+    this.changesetTracker = makeChangesetTracker(
+      window,
+      this.rep.apool,
+      {
+        withCallbacks: (operationName: string, f: (callbacks: any) => void) => {
+          this.inCallStackIfNecessary(operationName, () => {
+            this.fastIncorp(1);
+            f({
+              setDocumentAttributedText: (atext: any) => {
+                this.setDocAText(atext);
+              },
+              applyChangesetToDocument: (changeset: string, preferInsertionAfterCaret: boolean) => {
+                const oldEventType = this.currentCallStack.editEvent.eventType;
+                this.currentCallStack.startNewEvent('nonundoable');
+                this.performDocumentApplyChangeset(changeset, preferInsertionAfterCaret);
+                this.currentCallStack.startNewEvent(oldEventType);
+              },
+            });
+          });
+        },
+      },
+      () => this.thisAuthor,
+    );
+
+    // Note: editor:ace:initialized is NOT emitted here.
+    // When used within etherpad, ace.ts emits this event with the shared info object
+    // that holds ace_* prefixed methods for plugin compatibility.
   }
 
   dispose(): void {
@@ -376,7 +408,7 @@ export class AceEditor {
     });
   }
 
-  prepareUserChangeset(): { changeset: string | null; pool: any } | null {
+  prepareUserChangeset(): { changeset: string | null; apool: any } | null {
     if (!this.rep || !this.rep.apool) return null;
     // Incorporate any pending user changes first
     if (this.currentCallStack) {
@@ -386,9 +418,12 @@ export class AceEditor {
         this.fastIncorp(1);
       });
     }
+    if (this.changesetTracker) {
+      return this.changesetTracker.prepareUserChangeset();
+    }
     return {
       changeset: null,
-      pool: this.rep.apool.toJsonable(),
+      apool: this.rep.apool.toJsonable(),
     };
   }
 
@@ -414,6 +449,98 @@ export class AceEditor {
       this.authorInfos[author] = info;
     }
     this.setAuthorStyle(author, info);
+  }
+
+  // -----------------------------------------------------------------------
+  // Public API - Collaboration (changesetTracker delegation)
+  // -----------------------------------------------------------------------
+
+  setBaseText(txt: string): void {
+    this.changesetTracker?.setBaseText(txt);
+  }
+
+  setBaseAttributedText(atxt: any, apoolJsonObj?: any): void {
+    this.changesetTracker?.setBaseAttributedText(atxt, apoolJsonObj);
+  }
+
+  applyChangesToBase(c: string, optAuthor?: string, apoolJsonObj?: any): void {
+    this.changesetTracker?.applyChangesToBase(c, optAuthor, apoolJsonObj);
+  }
+
+  applyPreparedChangesetToBase(): void {
+    this.changesetTracker?.applyPreparedChangesetToBase();
+  }
+
+  setUserChangeNotificationCallback(f: () => void): void {
+    this.changesetTracker?.setUserChangeNotificationCallback(f);
+  }
+
+  // -----------------------------------------------------------------------
+  // Public API - Etherpad Compatibility
+  // -----------------------------------------------------------------------
+
+  setProperty(key: string, value: any): void {
+    switch (key) {
+      case 'wraps':
+        this.setWraps(value);
+        break;
+      case 'showsauthorcolors':
+        this.targetBody.classList.toggle('authorColors', !!value);
+        break;
+      case 'showsuserselections':
+        this.targetBody.classList.toggle('userSelections', !!value);
+        break;
+      case 'userauthor':
+        this.setAuthor(value);
+        break;
+      case 'styled':
+        this.setStyled(value);
+        break;
+      case 'textface':
+        this.targetBody.style.fontFamily = value || '';
+        break;
+      case 'rtlIsTrue':
+        this.targetBody.dir = value ? 'rtl' : 'ltr';
+        break;
+      case 'showslinenumbers':
+        // Line numbers are not managed by the editor itself
+        break;
+    }
+  }
+
+  exportText(): string {
+    return this.getText();
+  }
+
+  getInInternationalComposition(): any {
+    return this.inInternationalComposition;
+  }
+
+  setOnKeyPress(handler: ((evt: Event) => void) | null): void {
+    this.onKeyPressHandler = handler;
+  }
+
+  setOnKeyDown(handler: ((evt: Event) => void) | null): void {
+    this.onKeyDownHandler = handler;
+  }
+
+  setNotifyDirty(handler: (() => void) | null): void {
+    this.notifyDirtyHandler = handler;
+  }
+
+  callWithAce(fn: (editor: AceEditor) => any, callStack?: string, normalize?: boolean): any {
+    let wrapper = () => fn(this);
+    if (normalize !== undefined) {
+      const inner = wrapper;
+      wrapper = () => {
+        this.fastIncorp(9);
+        return inner();
+      };
+    }
+    if (callStack !== undefined) {
+      return this.inCallStackIfNecessary(callStack, wrapper);
+    }
+    return wrapper();
   }
 
   // -----------------------------------------------------------------------
@@ -643,6 +770,7 @@ export class AceEditor {
 
       editorBus.emit('editor:content:changed', {text: this.rep.alltext});
       if (this.onContentChanged) this.onContentChanged(this.rep.alltext);
+      if (this.notifyDirtyHandler) this.notifyDirtyHandler();
 
       cleanExit = true;
     } finally {
@@ -999,6 +1127,11 @@ export class AceEditor {
     }
 
     mutateAttributionLines(changes, this.rep.alines, this.rep.apool);
+
+    // Track user changes for collaboration
+    if (this.changesetTracker?.isTracking()) {
+      this.changesetTracker.composeUserChangeset(changes);
+    }
   }
 
   // -----------------------------------------------------------------------
@@ -1084,6 +1217,8 @@ export class AceEditor {
       lineEntry.domInfo.clearSpans();
       this.getSpansForLine(lineEntry, tokenFunc, lineStart);
       lineEntry.domInfo.finishUpdate();
+      // Sync lineMarker from domInfo (e.g. heading lines have lineMarker=1)
+      lineEntry.lineMarker = lineEntry.domInfo.lineMarker;
 
       this.markNodeClean(lineEntry.lineNode);
 
@@ -2166,11 +2301,12 @@ export class AceEditor {
         // Node not found in targetBody, return safe default
         return [0, 0];
       }
-      if (n.firstChild && this.isBlockElement(n.firstChild)) {
-        col += 1; // lineMarker
-      }
-      const lineEntry = n.id ? this.rep.lines.atKey(n.id) : null;
+      const lineEntry: any = n.id ? this.rep.lines.atKey(n.id) : null;
       if (!lineEntry) return [0, 0];
+      // Use the actual lineMarker from rep (set by domline during rendering).
+      // This correctly accounts for plugin block elements (h1-h6, etc.)
+      // without needing a hardcoded list of block element tags.
+      col += lineEntry.lineMarker;
       const lineNum = this.rep.lines.indexOfEntry(lineEntry);
       return [lineNum, col];
     }
@@ -2223,6 +2359,15 @@ export class AceEditor {
   }
 
   private updateBrowserSelectionFromRep(): void {
+    // Don't steal focus from other UI elements (dropdowns, selects, inputs, etc.).
+    // In the old iframe approach this wasn't needed because the editor had its own
+    // document. Now that the editor is in the main document, setting the selection
+    // here would close native <select> dropdowns and blur focused inputs.
+    const active = document.activeElement;
+    if (active && active !== this.targetBody && !this.targetBody.contains(active)) {
+      return;
+    }
+
     const selStart = this.rep.selStart;
     const selEnd = this.rep.selEnd;
 
@@ -2252,6 +2397,15 @@ export class AceEditor {
 
   private handleKeyEvent(evt: KeyboardEvent): void {
     if (!this.isEditable) return;
+
+    // Invoke external key handlers
+    if (evt.type === 'keypress' && this.onKeyPressHandler) {
+      this.onKeyPressHandler(evt);
+    }
+    if (evt.type === 'keydown' && this.onKeyDownHandler) {
+      this.onKeyDownHandler(evt);
+    }
+
     const {type, charCode, keyCode, which} = evt as any;
 
     let altKey = evt.altKey;
@@ -2921,7 +3075,7 @@ export class AceEditor {
     return str.replace(/[\n\r ]/g, ' ').replace(/\xa0/g, ' ').replace(/\t/g, '        ');
   }
 
-  private isBlockElement(n: Node): boolean {
+  /* @internal */ isBlockElement(n: Node): boolean {
     return !!AceEditor._blockElems[((n as Element).tagName || '').toLowerCase()];
   }
 

@@ -19,3 +19,5 @@ export { AceEditor } from './editor/AceEditor.js';
 export type { AText } from './editor/types/AText.js';
 export type { Attribute } from './editor/types/Attribute.js';
 export { default as AttributePool } from './editor/AttributePool.js';
+export { makeChangesetTracker } from './editor/changesettracker.js';
+export type { ChangesetTracker, AceCallbacksProvider, ChangesetTrackerCallbacks } from './editor/changesettracker.js';

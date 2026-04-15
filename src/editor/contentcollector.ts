@@ -111,7 +111,13 @@ export const makeContentCollector = (collectStyles: boolean, abrowser: any, apoo
     li: 1,
   };
 
-  editorBus.emit('editor:register:block:elements', {result: Object.keys(_blockElems)});
+  // Let plugins register additional block elements (e.g. h1-h4 from ep_heading).
+  // Plugins push tag names into the result array; we then add them to _blockElems.
+  const pluginBlockElems: string[] = [];
+  editorBus.emit('editor:register:block:elements', {result: pluginBlockElems});
+  for (const tag of pluginBlockElems) {
+    _blockElems[tag] = 1;
+  }
 
   const isBlockElement = (n: Node): boolean => !!_blockElems[tagName(n) || ''];
 

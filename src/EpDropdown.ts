@@ -51,10 +51,15 @@ export class EpDropdown extends LitElement {
 
   @state() private _focusIndex = -1;
   private _hoverCloseTimer: ReturnType<typeof setTimeout> | null = null;
+  private _mouseInContent = false;
 
   private _onDocClick = (e: Event) => {
     if (!this.open) return;
-    if (!e.composedPath().includes(this)) this.close();
+    const path = e.composedPath();
+    // Keep open if click is inside host OR inside the fixed-position content panel
+    if (path.includes(this)) return;
+    if (this._content && path.includes(this._content)) return;
+    this.close();
   };
 
   private _onDocKeydown = (e: KeyboardEvent) => {
@@ -101,7 +106,9 @@ export class EpDropdown extends LitElement {
         <slot name="trigger"></slot>
       </div>
       <div class="content-wrapper" role="listbox" part="content"
-           @mousedown="${this._preventFocusSteal}">
+           @mousedown="${this._preventFocusSteal}"
+           @mouseenter="${this._onContentMouseEnter}"
+           @mouseleave="${this._onContentMouseLeave}">
         <slot name="content"></slot>
       </div>
     `;
@@ -125,7 +132,25 @@ export class EpDropdown extends LitElement {
 
   private _onMouseLeave() {
     if (this.trigger !== 'hover') return;
-    this._hoverCloseTimer = setTimeout(() => this.close(), 200);
+    this._hoverCloseTimer = setTimeout(() => {
+      if (!this._mouseInContent) this.close();
+    }, 200);
+  }
+
+  private _onContentMouseEnter() {
+    this._mouseInContent = true;
+    // Cancel any pending hover-close timer
+    if (this._hoverCloseTimer != null) {
+      clearTimeout(this._hoverCloseTimer);
+      this._hoverCloseTimer = null;
+    }
+  }
+
+  private _onContentMouseLeave() {
+    this._mouseInContent = false;
+    if (this.trigger === 'hover') {
+      this._hoverCloseTimer = setTimeout(() => this.close(), 200);
+    }
   }
 
   private _onOpened() {
@@ -144,6 +169,7 @@ export class EpDropdown extends LitElement {
   private _onClosed() {
     this._content?.classList.remove('visible');
     this._focusIndex = -1;
+    this._mouseInContent = false;
     this._clearItemFocus();
     this._removeGlobalListeners();
   }

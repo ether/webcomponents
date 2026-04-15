@@ -304,4 +304,14 @@ export class EventBus<TEvents extends Record<string, any> = EditorEvents> {
 // Singleton instance for the editor
 // ---------------------------------------------------------------------------
 
-export const editorBus = new EventBus<EditorEvents>();
+/**
+ * Shared singleton: uses a global reference so that when bundled with a host
+ * application (like etherpad-go), both this package and the host's modules
+ * share the exact same EventBus instance. Whichever module initializes first
+ * creates the bus; subsequent modules reuse it.
+ */
+const _global = globalThis as any;
+if (!_global.__etherpadEditorBus) {
+  _global.__etherpadEditorBus = new EventBus<EditorEvents>();
+}
+export const editorBus: EventBus<EditorEvents> = _global.__etherpadEditorBus;
