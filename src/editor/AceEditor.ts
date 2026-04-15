@@ -3020,8 +3020,8 @@ export class AceEditor {
     for (let n = firstLine; n <= lastLine; n++) {
       let level = 0;
       let togglingOn = true;
-      const ltStr = this.getLineListType(n);
-      const listTypeParsed = /([a-z]+)([0-9]+)/.exec(ltStr);
+      const t = this.getLineListType(n);
+      const listTypeParsed = /([a-z]+)([0-9]+)/.exec(t);
 
       if (allLinesAreList) {
         togglingOn = false;
@@ -3030,8 +3030,6 @@ export class AceEditor {
       if (listTypeParsed) {
         level = Number(listTypeParsed[2]);
       }
-      const t = this.getLineListType(n);
-      if (t === ltStr) togglingOn = false;
 
       if (togglingOn) {
         mods.push([n, allLinesAreList
