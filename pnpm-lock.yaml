@@ -14,9 +14,6 @@ importers:
       '@lit/reactive-element':
         specifier: ^2.1.2
         version: 2.1.2
-      etherpad-webcomponents:
-        specifier: link:../../AppData/Local/pnpm/global/5/node_modules/etherpad-webcomponents
-        version: link:../../AppData/Local/pnpm/global/5/node_modules/etherpad-webcomponents
       lit:
         specifier: ^3.3.2
         version: 3.3.2

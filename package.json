@@ -45,9 +45,6 @@
     "type": "git",
     "url": "git+https://github.com/ether/webcomponents.git"
   },
-  "dependencies": {
-    "etherpad-webcomponents": "link:../../AppData/Local/pnpm/global/5/node_modules/etherpad-webcomponents"
-  },
   "peerDependencies": {
     "@lit/reactive-element": "^2.1.2",
     "lit": "^3.3.2",
