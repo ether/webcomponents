@@ -27,9 +27,12 @@ const isLightColor = (color: string): boolean => {
   }
 };
 
+// Etherpad's author colour palette (the pastel tints from
+// AuthorManager.getColorPalette) — the same swatches Etherpad offers when
+// picking your author colour.
 const DEFAULT_COLORS = [
-  'black', 'red', 'green', 'blue', 'yellow', 'orange',
-  'purple', 'pink', 'brown', 'gray', 'white', 'cyan',
+  '#ffc7c7', '#fff1c7', '#e3ffc7', '#c7ffd5', '#c7ffff', '#c7d5ff', '#e3c7ff', '#ffc7f1',
+  '#ffa8a8', '#ffe699', '#cfff9e', '#99ffb3', '#a3ffff', '#99b3ff', '#cc99ff', '#ff99e5',
 ];
 
 @customElement('ep-color-picker')

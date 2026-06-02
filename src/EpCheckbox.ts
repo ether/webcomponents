@@ -22,11 +22,17 @@ export class EpCheckbox extends LitElement {
       pointer-events: none;
     }
 
+    /* Etherpad colibris toggle: a light, outlined track (bg-soft fill with a
+       text-soft border) that switches to a primary-coloured border when
+       checked. */
     .track {
       position: relative;
-      background: var(--middle-color, #d2d2d2);
+      box-sizing: border-box;
+      background: var(--bg-soft-color, #f2f3f4);
+      border: 2px solid var(--text-soft-color, #576273);
       border-radius: 10px;
-      transition: background 0.2s ease;
+      opacity: 0.7;
+      transition: border-color 0.2s ease, opacity 0.2s ease;
       flex-shrink: 0;
     }
     
@@ -41,19 +47,24 @@ export class EpCheckbox extends LitElement {
     }
 
     :host([checked]) .track {
-      background: var(--text-color, #64d29b);
+      background: transparent;
+      border-color: var(--primary-color, #64d29b);
+      opacity: 1;
     }
-    
+
     .thumb {
       position: absolute;
       top: 50%;
       width: 16px;
       height: 16px;
       border-radius: 50%;
-      background: white;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
-      transition: transform 0.2s ease;
+      background: var(--text-soft-color, #576273);
+      transition: transform 0.2s ease, background 0.2s ease;
       transform: translateY(-50%);
+    }
+
+    :host([checked]) .thumb {
+      background: var(--primary-color, #64d29b);
     }
     
     :host([variant="default"]) .thumb {

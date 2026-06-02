@@ -63,7 +63,7 @@ export class EpEditor extends LitElement {
     .ep-editor-container .tag\\:u, .ep-editor-container u { text-decoration: underline; }
     .ep-editor-container .tag\\:s, .ep-editor-container s { text-decoration: line-through; }
 
-    .ep-editor-container a { color: var(--ep-editor-link-color, #0366d6); text-decoration: underline; }
+    .ep-editor-container a { color: var(--ep-editor-link-color, #2e96f3); text-decoration: underline; }
 
     :host([readonly]) .ep-editor-container {
       opacity: 0.85;

@@ -35,7 +35,9 @@ export class EpModal extends LitElement {
     :host([open]) { display: flex; }
     .overlay {
       position: fixed; inset: 0;
-      background: rgba(72, 83, 101, 0.3);
+      /* Matches Etherpad's dialog backdrop (#settings-dialog::backdrop). */
+      background: rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(2px);
       animation: ep-modal-fade-in 0.15s ease;
     }
     .dialog {
