@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>etherpad-webcomponents — demo</title>
+  <!--
+    Live demo of every component in the library.
+    Run from the repo root with `pnpm dev`, then open http://localhost:5173/examples/
+    Vite compiles the TypeScript source on the fly, so this page always reflects src/.
+  -->
+  <script type="module" src="../src/index.ts"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Quicksand, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+      background: var(--bg-soft-color, #f2f3f4);
+      color: var(--text-color, #485365);
+    }
+    header {
+      padding: 20px 28px;
+      background: var(--bg-color, #fff);
+      border-bottom: 1px solid var(--middle-color, #d2d2d2);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    header h1 { font-size: 18px; margin: 0; flex: 1; }
+    header .theme-picker { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+    main { max-width: 980px; margin: 0 auto; padding: 24px; }
+    section { margin-bottom: 28px; }
+    .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .card-inner { padding: 4px 0; }
+    h2 { font-size: 14px; text-transform: uppercase; letter-spacing: .5px; opacity: .7; }
+    code { background: var(--bg-soft-color, #eee); padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+    #event-log {
+      font-family: monospace; font-size: 12px; background: var(--bg-color, #fff);
+      border: 1px solid var(--middle-color, #d2d2d2); border-radius: 6px;
+      padding: 10px; height: 120px; overflow: auto; white-space: pre-wrap;
+    }
+    .editor-toolbar { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+    ep-editor {
+      border: 1px solid var(--middle-color, #d2d2d2); border-radius: 6px;
+      min-height: 140px; background: var(--bg-color, #fff);
+    }
+  </style>
+</head>
+
+<body>
+  <!-- ep-theme applies a token set to its whole subtree -->
+  <ep-theme name="colibris" id="root-theme">
+    <header>
+      <h1>🪶 etherpad-webcomponents <small style="opacity:.6">live demo</small></h1>
+      <label class="theme-picker">
+        Theme:
+        <select id="theme-select">
+          <option value="colibris">colibris</option>
+          <option value="colibris-dark">colibris-dark</option>
+          <option value="high-contrast">high-contrast</option>
+          <option value="warm">warm</option>
+        </select>
+      </label>
+    </header>
+
+    <main>
+      <!-- ───────── Buttons ───────── -->
+      <section>
+        <h2>Buttons</h2>
+        <div class="row">
+          <ep-button variant="default">Default</ep-button>
+          <ep-button variant="primary">Primary</ep-button>
+          <ep-button variant="ghost">Ghost</ep-button>
+          <ep-button variant="primary" uppercase>Uppercase</ep-button>
+          <ep-button variant="primary" size="small">Small</ep-button>
+          <ep-button variant="primary" size="large">Large</ep-button>
+          <ep-button variant="primary" disabled>Disabled</ep-button>
+        </div>
+      </section>
+
+      <!-- ───────── Inputs & checkbox ───────── -->
+      <section>
+        <h2>Inputs</h2>
+        <div class="row" style="align-items: flex-start;">
+          <ep-input label="Pad name" placeholder="My pad" hint="Pick something memorable"></ep-input>
+          <ep-input label="Password" type="password" placeholder="••••••"></ep-input>
+          <ep-input label="Bad value" value="oops" error error-text="Something is wrong"></ep-input>
+        </div>
+        <div class="row" style="margin-top: 12px;">
+          <ep-checkbox label="Enable autosave" checked></ep-checkbox>
+          <ep-checkbox label="Retro style" variant="retro"></ep-checkbox>
+          <ep-checkbox label="Disabled" disabled></ep-checkbox>
+        </div>
+      </section>
+
+      <!-- ───────── Cards ───────── -->
+      <section>
+        <h2>Cards</h2>
+        <div class="row" style="align-items: stretch;">
+          <ep-card card-title="Welcome" subtitle="A bordered card" bordered>
+            <div class="card-inner">Cards group related content and accept slotted children.</div>
+          </ep-card>
+          <ep-card card-title="Compact" compact>
+            <div class="card-inner">A compact card variant.</div>
+          </ep-card>
+        </div>
+      </section>
+
+      <!-- ───────── Dropdown & toolbar select ───────── -->
+      <section>
+        <h2>Dropdown &amp; toolbar select</h2>
+        <div class="row">
+          <ep-dropdown id="dd">
+            <ep-button slot="trigger" variant="default">Open menu ▾</ep-button>
+            <ep-dropdown-item value="cut">Cut</ep-dropdown-item>
+            <ep-dropdown-item value="copy">Copy</ep-dropdown-item>
+            <ep-dropdown-item value="paste" disabled>Paste (disabled)</ep-dropdown-item>
+          </ep-dropdown>
+
+          <ep-toolbar-select id="ts" label="Heading" placeholder="Select…"></ep-toolbar-select>
+        </div>
+      </section>
+
+      <!-- ───────── Colors ───────── -->
+      <section>
+        <h2>Color picker &amp; wheel</h2>
+        <div class="row" style="align-items: flex-start;">
+          <ep-color-picker id="cp"></ep-color-picker>
+          <ep-color-wheel id="cw" style="width:180px;height:180px;"></ep-color-wheel>
+          <ep-user-badge id="badge" name="Ada Lovelace" color="#64d29b" online></ep-user-badge>
+        </div>
+      </section>
+
+      <!-- ───────── Chat ───────── -->
+      <section>
+        <h2>Chat messages</h2>
+        <ep-chat-message author="Ada" author-color="#64d29b" time="10:24">
+          Shall we collaborate on this pad?
+        </ep-chat-message>
+        <ep-chat-message author="You" time="10:25" own>
+          Absolutely — joining now.
+        </ep-chat-message>
+      </section>
+
+      <!-- ───────── Overlays ───────── -->
+      <section>
+        <h2>Modal, toasts &amp; notifications</h2>
+        <div class="row">
+          <ep-button variant="primary" id="open-modal">Open modal</ep-button>
+          <ep-button variant="default" id="show-toast">Show toast</ep-button>
+          <ep-button variant="default" id="show-notif">Show notification</ep-button>
+        </div>
+      </section>
+
+      <!-- ───────── Editor ───────── -->
+      <section>
+        <h2>Rich-text editor (&lt;ep-editor&gt;)</h2>
+        <div class="editor-toolbar">
+          <ep-button variant="default" size="small" data-fmt="bold"><b>B</b></ep-button>
+          <ep-button variant="default" size="small" data-fmt="italic"><i>I</i></ep-button>
+          <ep-button variant="default" size="small" data-fmt="underline"><u>U</u></ep-button>
+          <ep-button variant="default" size="small" data-fmt="strikethrough"><s>S</s></ep-button>
+          <ep-button variant="default" size="small" id="ed-ul">• List</ep-button>
+          <ep-button variant="default" size="small" id="ed-ol">1. List</ep-button>
+          <ep-button variant="default" size="small" id="ed-undo">↶ Undo</ep-button>
+          <ep-button variant="default" size="small" id="ed-redo">↷ Redo</ep-button>
+        </div>
+        <ep-editor id="editor" content="Select some text and try the toolbar. This editor is Etherpad's real Ace engine running as a web component."></ep-editor>
+      </section>
+
+      <!-- ───────── Event log ───────── -->
+      <section>
+        <h2>Event log</h2>
+        <div id="event-log"></div>
+      </section>
+    </main>
+
+    <!-- toast + notification hosts -->
+    <ep-toast-container id="toasts" position="top-right"></ep-toast-container>
+
+    <!-- modal (hidden until opened) -->
+    <ep-modal id="modal">
+      <span slot="title">Example modal</span>
+      <p>This is an <code>&lt;ep-modal&gt;</code>. Click the backdrop, press Escape, or the close button to dismiss.</p>
+      <div slot="footer">
+        <ep-button variant="primary" id="modal-ok">Got it</ep-button>
+      </div>
+    </ep-modal>
+  </ep-theme>
+
+  <script type="module">
+    import { EpNotification } from '../src/EpNotification.js';
+
+    const log = (msg) => {
+      const el = document.getElementById('event-log');
+      el.textContent += msg + '\n';
+      el.scrollTop = el.scrollHeight;
+    };
+
+    // Theme switcher
+    document.getElementById('theme-select').addEventListener('change', (e) => {
+      document.getElementById('root-theme').name = e.target.value;
+      log(`theme → ${e.target.value}`);
+    });
+
+    // Toolbar select options (set imperatively — it's an array property)
+    const ts = document.getElementById('ts');
+    ts.options = [
+      { value: 'h1', label: 'Heading 1' },
+      { value: 'h2', label: 'Heading 2' },
+      { value: 'p',  label: 'Paragraph' },
+    ];
+    ts.addEventListener('ep-toolbar-select:change', (e) => log(`toolbar-select → ${JSON.stringify(e.detail)}`));
+
+    // Dropdown
+    document.getElementById('dd').addEventListener('ep-dropdown-select', (e) => log(`dropdown → ${JSON.stringify(e.detail)}`));
+
+    // Colors
+    const badge = document.getElementById('badge');
+    document.getElementById('cp').addEventListener('ep-color-select', (e) => {
+      log(`color-picker → ${JSON.stringify(e.detail)}`);
+      if (e.detail?.color) badge.color = e.detail.color;
+    });
+    document.getElementById('cw').addEventListener('ep-color-change', (e) => {
+      if (e.detail?.color) badge.color = e.detail.color;
+    });
+
+    // Checkbox
+    document.querySelectorAll('ep-checkbox').forEach((cb) =>
+      cb.addEventListener('ep-change', (e) => log(`checkbox(${cb.label}) → ${JSON.stringify(e.detail)}`)));
+
+    // Modal
+    const modal = document.getElementById('modal');
+    document.getElementById('open-modal').addEventListener('click', () => { modal.open = true; });
+    modal.addEventListener('ep-modal-close', () => log('modal closed'));
+    document.getElementById('modal-ok').addEventListener('click', () => { modal.open = false; });
+
+    // Toast — EpToastContainer.addToast({ type, message, duration })
+    let toastN = 0;
+    document.getElementById('show-toast').addEventListener('click', () => {
+      const types = ['info', 'success', 'warning', 'error'];
+      const type = types[toastN++ % types.length];
+      document.getElementById('toasts').addToast({ type, message: `This is a ${type} toast` });
+      log(`toast → ${type}`);
+    });
+
+    // Notification — EpNotification.show({ text, type, duration })
+    document.getElementById('show-notif').addEventListener('click', () => {
+      EpNotification.show({ text: 'Saved!', type: 'success' });
+      log('notification → success');
+    });
+
+    // Editor toolbar
+    const editor = document.getElementById('editor');
+    editor.addEventListener('ready', () => log('editor ready'));
+    editor.addEventListener('content-changed', (e) => log(`editor content-changed (len ${e.detail.text.length})`));
+    document.querySelectorAll('[data-fmt]').forEach((btn) =>
+      btn.addEventListener('click', () => { editor.toggleFormat(btn.dataset.fmt); editor.focusEditor(); }));
+    document.getElementById('ed-ul').addEventListener('click', () => editor.insertUnorderedList());
+    document.getElementById('ed-ol').addEventListener('click', () => editor.insertOrderedList());
+    document.getElementById('ed-undo').addEventListener('click', () => editor.undo());
+    document.getElementById('ed-redo').addEventListener('click', () => editor.redo());
+
+    log('demo loaded — interact with the components above');
+  </script>
+</body>
+</html>
