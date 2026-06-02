@@ -1,4 +1,4 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { AceEditor } from './editor/AceEditor.js';
 import type AttributePool from './editor/AttributePool.js';
@@ -16,60 +16,14 @@ import type AttributePool from './editor/AttributePool.js';
  */
 @customElement('ep-editor')
 export class EpEditor extends LitElement {
-  static styles = css`
-    :host {
-      display: block;
-      position: relative;
-      min-height: 100px;
-    }
-
-    .ep-editor-container {
-      width: 100%;
-      height: 100%;
-      min-height: inherit;
-      overflow: auto;
-      font-family: var(--ep-editor-font, var(--main-font-family, Quicksand, Cantarell, "Open Sans", "Helvetica Neue", sans-serif));
-      font-size: var(--ep-editor-font-size, 14px);
-      line-height: var(--ep-editor-line-height, 1.6);
-      color: var(--ep-editor-color, var(--text-color, #485365));
-      background: var(--ep-editor-bg, var(--bg-color, #fff));
-      padding: var(--ep-editor-padding, 8px 12px);
-      box-sizing: border-box;
-      outline: none;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-    }
-
-    .ep-editor-container:focus {
-      outline: none;
-    }
-
-    .ep-editor-container .list-bullet1 { list-style-type: disc; }
-    .ep-editor-container .list-bullet2 { list-style-type: circle; }
-    .ep-editor-container .list-bullet3 { list-style-type: square; }
-    .ep-editor-container .list-bullet4 { list-style-type: disc; }
-    .ep-editor-container .list-number1 { list-style-type: decimal; }
-    .ep-editor-container .list-number2 { list-style-type: lower-alpha; }
-    .ep-editor-container .list-number3 { list-style-type: lower-roman; }
-    .ep-editor-container .list-number4 { list-style-type: decimal; }
-
-    .ep-editor-container ul, .ep-editor-container ol {
-      padding-left: 1.5em;
-      margin: 0;
-    }
-
-    .ep-editor-container .tag\\:b, .ep-editor-container b { font-weight: bold; }
-    .ep-editor-container .tag\\:i, .ep-editor-container i { font-style: italic; }
-    .ep-editor-container .tag\\:u, .ep-editor-container u { text-decoration: underline; }
-    .ep-editor-container .tag\\:s, .ep-editor-container s { text-decoration: line-through; }
-
-    .ep-editor-container a { color: var(--ep-editor-link-color, #2e96f3); text-decoration: underline; }
-
-    :host([readonly]) .ep-editor-container {
-      opacity: 0.85;
-      cursor: default;
-    }
-  `;
+  // Render into the light DOM, NOT a shadow root. Etherpad's Ace engine reads
+  // and restores the caret via the document Selection API, which does not work
+  // reliably across a shadow boundary (the caret retargets to the host and
+  // every keystroke inserts at offset 0, reversing the text). In light DOM the
+  // engine uses the standard, well-tested selection path.
+  protected createRenderRoot() {
+    return this;
+  }
 
   /** Initial text content for the editor. */
   @property({ type: String }) content = '';
@@ -95,7 +49,7 @@ export class EpEditor extends LitElement {
   // ── Lifecycle ──────────────────────────────────────────────
 
   protected firstUpdated() {
-    const container = this.shadowRoot!.querySelector('.ep-editor-container') as HTMLElement;
+    const container = this.renderRoot.querySelector('.ep-editor-container') as HTMLElement;
     if (!container) return;
 
     this._editor = new AceEditor(container);
@@ -294,6 +248,41 @@ export class EpEditor extends LitElement {
 
   protected render() {
     return html`
+      <style>
+        ep-editor { display: block; position: relative; min-height: 100px; }
+        ep-editor .ep-editor-container {
+          width: 100%;
+          height: 100%;
+          min-height: inherit;
+          overflow: auto;
+          font-family: var(--ep-editor-font, var(--main-font-family, Quicksand, Cantarell, "Open Sans", "Helvetica Neue", sans-serif));
+          font-size: var(--ep-editor-font-size, 14px);
+          line-height: var(--ep-editor-line-height, 1.6);
+          color: var(--ep-editor-color, var(--text-color, #485365));
+          background: var(--ep-editor-bg, var(--bg-color, #fff));
+          padding: var(--ep-editor-padding, 8px 12px);
+          box-sizing: border-box;
+          outline: none;
+          white-space: pre-wrap;
+          word-wrap: break-word;
+        }
+        ep-editor .ep-editor-container:focus { outline: none; }
+        ep-editor .ep-editor-container .list-bullet1 { list-style-type: disc; }
+        ep-editor .ep-editor-container .list-bullet2 { list-style-type: circle; }
+        ep-editor .ep-editor-container .list-bullet3 { list-style-type: square; }
+        ep-editor .ep-editor-container .list-bullet4 { list-style-type: disc; }
+        ep-editor .ep-editor-container .list-number1 { list-style-type: decimal; }
+        ep-editor .ep-editor-container .list-number2 { list-style-type: lower-alpha; }
+        ep-editor .ep-editor-container .list-number3 { list-style-type: lower-roman; }
+        ep-editor .ep-editor-container .list-number4 { list-style-type: decimal; }
+        ep-editor .ep-editor-container ul, ep-editor .ep-editor-container ol { padding-left: 1.5em; margin: 0; }
+        ep-editor .ep-editor-container .tag\\:b, ep-editor .ep-editor-container b { font-weight: bold; }
+        ep-editor .ep-editor-container .tag\\:i, ep-editor .ep-editor-container i { font-style: italic; }
+        ep-editor .ep-editor-container .tag\\:u, ep-editor .ep-editor-container u { text-decoration: underline; }
+        ep-editor .ep-editor-container .tag\\:s, ep-editor .ep-editor-container s { text-decoration: line-through; }
+        ep-editor .ep-editor-container a { color: var(--ep-editor-link-color, #2e96f3); text-decoration: underline; }
+        ep-editor[readonly] .ep-editor-container { opacity: 0.85; cursor: default; }
+      </style>
       <div
         class="ep-editor-container"
         contenteditable="${this.readonly ? 'false' : 'true'}"
