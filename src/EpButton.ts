@@ -20,6 +20,10 @@ export class EpButton extends LitElement {
       line-height: 1.5;
       border: none;
       outline: none;
+      /* Reset the UA button background so it doesn't leak through variants
+         that set their own (default/ghost/icon were showing the browser's
+         light ButtonFace, which looked broken in dark themes). */
+      background: transparent;
       display: inline-flex;
       width: 100%;
       height: 100%;

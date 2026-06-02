@@ -90,7 +90,7 @@ export class EpNotification extends LitElement {
     }
 
     :host([type="error"]) .notification {
-      border-left-color: #d9534f;
+      border-left-color: #d1242f;
     }
 
     :host([type="info"]) .notification {
@@ -105,7 +105,7 @@ export class EpNotification extends LitElement {
     }
 
     :host([type="success"]) .icon { color: var(--primary-color, #64d29b); }
-    :host([type="error"]) .icon { color: #d9534f; }
+    :host([type="error"]) .icon { color: #d1242f; }
     :host([type="info"]) .icon { color: var(--dark-color, #576273); }
 
     .body { flex: 1; min-width: 0; word-wrap: break-word; }

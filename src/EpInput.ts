@@ -65,13 +65,13 @@ export class EpInput extends LitElement {
 
     :host([error]) input,
     :host([error]) textarea {
-      border-color: #d9534f;
+      border-color: #d1242f;
     }
 
     .error-text {
       font-family: var(--ep-font);
       font-size: 12px;
-      color: #d9534f;
+      color: #d1242f;
       margin-top: 4px;
     }
   `;
