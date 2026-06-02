@@ -11,6 +11,8 @@ export { EpModal } from './EpModal.js';
 export { EpNotification } from './EpNotification.js';
 export { EpToastContainer, EpToastItem } from './EpToast.js';
 export { EpToolbarSelect } from './EpToolbarSelect.js';
+export { EpSelect } from './EpSelect.js';
+export type { EpSelectOption } from './EpSelect.js';
 export { EpUserBadge } from './EpUserBadge.js';
 export { EpTheme, themes } from './EpTheme.js';
 export type { ThemeTokens } from './EpTheme.js';
