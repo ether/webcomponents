@@ -28,11 +28,11 @@ export class EpEditor extends LitElement {
       height: 100%;
       min-height: inherit;
       overflow: auto;
-      font-family: var(--ep-editor-font, monospace);
+      font-family: var(--ep-editor-font, var(--main-font-family, Quicksand, Cantarell, "Open Sans", "Helvetica Neue", sans-serif));
       font-size: var(--ep-editor-font-size, 14px);
       line-height: var(--ep-editor-line-height, 1.6);
-      color: var(--ep-editor-color, #333);
-      background: var(--ep-editor-bg, #fff);
+      color: var(--ep-editor-color, var(--text-color, #485365));
+      background: var(--ep-editor-bg, var(--bg-color, #fff));
       padding: var(--ep-editor-padding, 8px 12px);
       box-sizing: border-box;
       outline: none;
