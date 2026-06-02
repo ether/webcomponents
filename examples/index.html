@@ -47,10 +47,26 @@
       border: 1px solid var(--middle-color, #d2d2d2); border-radius: 6px;
       padding: 10px; height: 120px; overflow: auto; white-space: pre-wrap;
     }
-    .editor-toolbar { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+    /* Etherpad-style editbar: a row of transparent icon buttons on a
+       bg-coloured bar, sitting flush above the editor. */
+    .editor-toolbar {
+      display: flex; align-items: center; gap: 1px;
+      background: var(--bg-color, #fff);
+      color: var(--text-soft-color, #576273);
+      border: 1px solid var(--middle-color, #d2d2d2);
+      border-bottom: none;
+      border-radius: 6px 6px 0 0;
+      padding: 3px 6px;
+    }
+    .editor-toolbar .sep {
+      width: 1px; height: 18px; margin: 0 6px;
+      background: var(--middle-color, #d2d2d2);
+    }
+    .editor-toolbar ep-button svg { width: 16px; height: 16px; display: block; }
     ep-editor {
       display: block;
-      border: 1px solid var(--middle-color, #d2d2d2); border-radius: 6px;
+      border: 1px solid var(--middle-color, #d2d2d2);
+      border-radius: 0 0 6px 6px;
       min-height: 140px;
       /* Map the editor's own tokens onto the active theme so it isn't a white
          box in dark mode. */
@@ -194,15 +210,33 @@
       <!-- ───────── Editor ───────── -->
       <section>
         <h2>Rich-text editor (&lt;ep-editor&gt;)</h2>
-        <div class="editor-toolbar">
-          <ep-button variant="default" size="small" data-fmt="bold"><b>B</b></ep-button>
-          <ep-button variant="default" size="small" data-fmt="italic"><i>I</i></ep-button>
-          <ep-button variant="default" size="small" data-fmt="underline"><u>U</u></ep-button>
-          <ep-button variant="default" size="small" data-fmt="strikethrough"><s>S</s></ep-button>
-          <ep-button variant="default" size="small" id="ed-ul">• List</ep-button>
-          <ep-button variant="default" size="small" id="ed-ol">1. List</ep-button>
-          <ep-button variant="default" size="small" id="ed-undo">↶ Undo</ep-button>
-          <ep-button variant="default" size="small" id="ed-redo">↷ Redo</ep-button>
+        <div class="editor-toolbar" role="toolbar" aria-label="Formatting">
+          <ep-button variant="icon" data-fmt="bold" title="Bold">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h8a4 4 0 0 1 0 8H6z"/><path d="M6 12h9a4 4 0 0 1 0 8H6z"/></svg>
+          </ep-button>
+          <ep-button variant="icon" data-fmt="italic" title="Italic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/></svg>
+          </ep-button>
+          <ep-button variant="icon" data-fmt="underline" title="Underline">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" y1="21" x2="20" y2="21"/></svg>
+          </ep-button>
+          <ep-button variant="icon" data-fmt="strikethrough" title="Strikethrough">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4H9a3 3 0 0 0-2.83 4"/><path d="M14 12a4 4 0 0 1 0 8H6"/><line x1="4" y1="12" x2="20" y2="12"/></svg>
+          </ep-button>
+          <span class="sep"></span>
+          <ep-button variant="icon" id="ed-ul" title="Bullet list">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          </ep-button>
+          <ep-button variant="icon" id="ed-ol" title="Numbered list">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+          </ep-button>
+          <span class="sep"></span>
+          <ep-button variant="icon" id="ed-undo" title="Undo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
+          </ep-button>
+          <ep-button variant="icon" id="ed-redo" title="Redo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13"/></svg>
+          </ep-button>
         </div>
         <ep-editor id="editor" content="Select some text and try the toolbar. This editor is Etherpad's real Ace engine running as a web component."></ep-editor>
       </section>
