@@ -1,12 +1,13 @@
 import { chromium } from 'playwright';
 
+const PORT = process.env.PORT || 5173;
 const errors = [];
 const browser = await chromium.launch();
 const page = await browser.newPage();
 page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
 page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
 
-await page.goto('http://localhost:5199/examples/', { waitUntil: 'networkidle' });
+await page.goto(`http://localhost:${PORT}/examples/`, { waitUntil: 'networkidle' });
 await page.waitForTimeout(800);
 
 const check = async (label, fn) => {
@@ -50,10 +51,18 @@ await page.click('#show-notif');
 await check('notification appears', () =>
   page.evaluate(() => document.querySelectorAll('ep-notification').length > 0));
 
-// theme switch
+// theme switch — assert the RENDERED page + editor backgrounds actually change,
+// not just that a CSS var was set (the bug that motivated this test).
+const pageBg = () => page.evaluate(() => getComputedStyle(document.querySelector('.page')).backgroundColor);
+const editorBg = () => page.evaluate(() => {
+  const c = document.querySelector('ep-editor')?.shadowRoot?.querySelector('.ep-editor-container');
+  return c ? getComputedStyle(c).backgroundColor : null;
+});
+const lightPage = await pageBg(), lightEditor = await editorBg();
 await page.selectOption('#theme-select', 'colibris-dark');
-await check('theme switch applies token', () =>
-  page.evaluate(() => document.getElementById('root-theme').style.getPropertyValue('--bg-color').trim() === '#2c3143'));
+await page.waitForTimeout(300);
+await check('theme switch changes page background', async () => (await pageBg()) !== lightPage);
+await check('theme switch changes editor background', async () => (await editorBg()) !== lightEditor);
 
 await page.screenshot({ path: 'examples/demo.png', fullPage: true });
 console.log('\nscreenshot → examples/demo.png');

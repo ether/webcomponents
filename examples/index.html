@@ -11,11 +11,18 @@
   -->
   <script type="module" src="../src/index.ts"></script>
   <style>
+    html, body { margin: 0; min-height: 100%; }
     body {
-      margin: 0;
       font-family: Quicksand, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+      background: #2c3143; /* neutral fallback behind the themed page */
+    }
+    /* The themed surface. Lives INSIDE <ep-theme>, so its background and text
+       colour track the selected theme (unlike <body>, which is outside it). */
+    .page {
+      min-height: 100vh;
       background: var(--bg-soft-color, #f2f3f4);
       color: var(--text-color, #485365);
+      transition: background .15s ease, color .15s ease;
     }
     header {
       padding: 20px 28px;
@@ -32,24 +39,56 @@
     section { margin-bottom: 28px; }
     .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
     .card-inner { padding: 4px 0; }
-    h2 { font-size: 14px; text-transform: uppercase; letter-spacing: .5px; opacity: .7; }
-    code { background: var(--bg-soft-color, #eee); padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+    h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .5px; color: var(--text-soft-color, #576273); }
+    code { background: var(--bg-color, #eee); padding: 1px 5px; border-radius: 3px; font-size: 12px; }
     #event-log {
       font-family: monospace; font-size: 12px; background: var(--bg-color, #fff);
+      color: var(--text-color, #485365);
       border: 1px solid var(--middle-color, #d2d2d2); border-radius: 6px;
       padding: 10px; height: 120px; overflow: auto; white-space: pre-wrap;
     }
     .editor-toolbar { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
     ep-editor {
+      display: block;
       border: 1px solid var(--middle-color, #d2d2d2); border-radius: 6px;
-      min-height: 140px; background: var(--bg-color, #fff);
+      min-height: 140px;
+      /* Map the editor's own tokens onto the active theme so it isn't a white
+         box in dark mode. */
+      --ep-editor-bg: var(--bg-color, #fff);
+      --ep-editor-color: var(--text-color, #333);
+      --ep-editor-link-color: var(--primary-color, #0366d6);
     }
+
+    /* Shown only if the page was NOT loaded through the Vite dev server
+       (where the TypeScript source can be compiled). Hidden once components
+       upgrade. */
+    #not-loaded {
+      position: fixed; inset: 0; z-index: 99999;
+      display: flex; align-items: center; justify-content: center;
+      background: #2c3143; color: #e4e6eb; text-align: center;
+      font-family: system-ui, sans-serif; padding: 24px;
+    }
+    #not-loaded code { background: #1f2433; color: #64d29b; }
   </style>
 </head>
 
 <body>
+  <!-- Fallback shown until the components upgrade. If you opened this file
+       directly (file://) or via a plain static server, the .ts source can't
+       run — start the Vite dev server instead. Removed by the script below
+       once <ep-theme> is defined. -->
+  <div id="not-loaded">
+    <div>
+      <h2>Components didn’t load</h2>
+      <p>This demo loads the library from TypeScript source, which needs the Vite dev server.</p>
+      <p>From the repo root run <code>pnpm dev</code> and open the URL it prints, e.g.<br>
+        <code>http://localhost:5173/examples/</code></p>
+    </div>
+  </div>
+
   <!-- ep-theme applies a token set to its whole subtree -->
   <ep-theme name="colibris" id="root-theme">
+   <div class="page">
     <header>
       <h1>🪶 etherpad-webcomponents <small style="opacity:.6">live demo</small></h1>
       <label class="theme-picker">
@@ -174,6 +213,7 @@
         <div id="event-log"></div>
       </section>
     </main>
+   </div><!-- /.page -->
 
     <!-- toast + notification hosts -->
     <ep-toast-container id="toasts" position="top-right"></ep-toast-container>
@@ -187,6 +227,14 @@
       </div>
     </ep-modal>
   </ep-theme>
+
+  <!-- Guard: runs even if the module imports fail. Hides the fallback once
+       components upgrade; otherwise the fallback stays visible with instructions. -->
+  <script>
+    customElements.whenDefined('ep-theme').then(() => {
+      document.getElementById('not-loaded')?.remove();
+    });
+  </script>
 
   <script type="module">
     import { EpNotification } from '../src/EpNotification.js';
