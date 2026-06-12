@@ -20,6 +20,10 @@ export class EpButton extends LitElement {
       line-height: 1.5;
       border: none;
       outline: none;
+      /* Reset the UA button background so it doesn't leak through variants
+         that set their own (default/ghost/icon were showing the browser's
+         light ButtonFace, which looked broken in dark themes). */
+      background: transparent;
       display: inline-flex;
       width: 100%;
       height: 100%;
@@ -51,21 +55,21 @@ export class EpButton extends LitElement {
       background: var(--bg-soft-color, #f2f3f4);
     }
 
-    /* Primary */
+    /* Primary — matches Etherpad colibris .btn-primary: primary-coloured
+       background with bg-coloured (white) text. */
     :host([variant="primary"]) button {
-      background: var(--text-color, #586a69);
-      color: var(--primary-color, #64d29b);
+      background: var(--primary-color, #64d29b);
+      color: var(--bg-color, #ffffff);
       border: none;
-      transition: .2s background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
-    }
-
-    :host([variant="primary"]) button:active {
-      box-shadow: var(--primary-button-active,inset 0 1px 12px rgba(0, 0, 0, 0.9));
-      background: var(--primary-button-active, #444);
+      transition: filter 0.15s ease, opacity 0.15s ease;
     }
 
     :host([variant="primary"]) button:hover {
-      background: var(--dark-color, #4a5d5c);
+      filter: brightness(0.94);
+    }
+
+    :host([variant="primary"]) button:active {
+      filter: brightness(0.88);
     }
 
     /* Ghost */

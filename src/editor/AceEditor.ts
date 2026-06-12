@@ -2068,13 +2068,38 @@ export class AceEditor {
     return this.targetDoc.getSelection();
   }
 
+  // Obtain the live selection range. Inside a shadow root, getRangeAt(0)
+  // retargets the range to the shadow host (losing the real caret, which then
+  // reads as offset 0 — every keystroke would insert at the document start).
+  // getComposedRanges({shadowRoots}) returns a range that descends into the
+  // shadow tree, so we use it whenever the editor lives in a shadow root.
+  private getSelectionRange(browserSelection: any): {
+    startContainer: Node; startOffset: number; endContainer: Node; endOffset: number;
+  } | null {
+    if (this.rootNode instanceof ShadowRoot &&
+        typeof browserSelection.getComposedRanges === 'function') {
+      const ranges = browserSelection.getComposedRanges({ shadowRoots: [this.rootNode] });
+      if (ranges && ranges.length > 0) {
+        const r = ranges[0];
+        if (r.startContainer) return r;
+      }
+    }
+    if (browserSelection.rangeCount === 0) return null;
+    return browserSelection.getRangeAt(0);
+  }
+
   private getSelection(): any {
     const browserSelection = this.getDocSelection();
-    if (!browserSelection || browserSelection.type === 'None' ||
-        browserSelection.rangeCount === 0) {
+    if (!browserSelection) return null;
+    // In shadow DOM the legacy Selection reports type 'None' / rangeCount 0
+    // even when the caret is in the shadow tree, but getComposedRanges still
+    // resolves it — so only apply these guards outside a shadow root.
+    if (!(this.rootNode instanceof ShadowRoot) &&
+        (browserSelection.type === 'None' || browserSelection.rangeCount === 0)) {
       return null;
     }
-    const range = browserSelection.getRangeAt(0);
+    const range = this.getSelectionRange(browserSelection);
+    if (!range) return null;
 
     const isInBody = (n: Node | null): boolean => {
       while (n) {
