@@ -28,7 +28,8 @@
     "./editor/AceEditor.js": "./dist/editor/AceEditor.js",
     "./editor/AttributePool.js": "./dist/editor/AttributePool.js",
     "./editor/Changeset.js": "./dist/editor/Changeset.js",
-    "./editor/changesettracker.js": "./dist/editor/changesettracker.js"
+    "./editor/changesettracker.js": "./dist/editor/changesettracker.js",
+    "./collab/clientMessage.js": "./dist/collab/clientMessage.js"
   },
   "files": [
     "dist"
@@ -37,7 +38,8 @@
     "dev": "vite",
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "test": "vitest --project storybook",
+    "test": "vitest --project storybook --project unit",
+    "test:unit": "vitest --project unit",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },

@@ -67,6 +67,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Install Playwright browsers
+        # Use the project-pinned Playwright (pnpm exec), not `pnpm dlx` which
+        # fetches the latest Playwright and installs mismatched browser
+        # revisions, leaving the pinned version's binary missing.
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Run tests
