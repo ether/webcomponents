@@ -21,3 +21,13 @@ export type { Attribute } from './editor/types/Attribute.js';
 export { default as AttributePool } from './editor/AttributePool.js';
 export { makeChangesetTracker } from './editor/changesettracker.js';
 export type { ChangesetTracker, AceCallbacksProvider, ChangesetTrackerCallbacks } from './editor/changesettracker.js';
+export { createClientMessageHandler, extractClientMessagePayload } from './collab/clientMessage.js';
+export type {
+  ClientMessageHandler,
+  ClientMessageHandlerContext,
+  ClientMessagePayload,
+  CollabUserInfo,
+  PadOptionsPayload,
+  SuggestUserNamePayload,
+  UserInfoUpdateMessage,
+} from './collab/clientMessage.js';
