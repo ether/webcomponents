@@ -21,6 +21,7 @@
     "./EpNotification.js": "./dist/EpNotification.js",
     "./EpToast.js": "./dist/EpToast.js",
     "./EpToolbarSelect.js": "./dist/EpToolbarSelect.js",
+    "./EpSelect.js": "./dist/EpSelect.js",
     "./EpUserBadge.js": "./dist/EpUserBadge.js",
     "./EpTheme.js": "./dist/EpTheme.js",
     "./EpEditor.js": "./dist/EpEditor.js",
