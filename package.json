@@ -1,5 +1,5 @@
 {
-  "name": "etherpad-webcomponents",
+  "name": "@ether/etherpad-webcomponents",
   "version": "0.0.11",
   "description": "Etherpad Web Components built with Lit",
   "type": "module",
@@ -75,5 +75,8 @@
     "overrides": {
       "etherpad-webcomponents": "link:../../AppData/Local/pnpm/global/5/node_modules/etherpad-webcomponents"
     }
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
   }
 }
