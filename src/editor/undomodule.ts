@@ -227,6 +227,18 @@ export const undoModule: UndoModule = (() => {
     return null;
   };
 
+  // Keystroke edits reach the undo stack tagged with the call stack that
+  // incorporated them: 'handleKeyEvent' when handled synchronously, or
+  // 'idleWorkTimer' when the idle incorporation picks them up. Both are the
+  // same logical "typing" action, so consecutive single-character edits must
+  // coalesce into one undo step regardless of which path tagged them.
+  // Otherwise a typing run that straddles both paths (which is timing
+  // dependent — it happens on slower machines) splits into several undo
+  // steps, so a single Ctrl+Z only removes part of the word.
+  const TYPING_EVENT_TYPES = new Set(['handleKeyEvent', 'idleWorkTimer']);
+  const typesCanMerge = (a?: string, b?: string): boolean =>
+    a === b || (!!a && !!b && TYPING_EVENT_TYPES.has(a) && TYPING_EVENT_TYPES.has(b));
+
   const reportEvent = (event: ReportedEvent) => {
     const topEvent = stack.getNthFromTop(0);
 
@@ -242,7 +254,7 @@ export const undoModule: UndoModule = (() => {
       applySelectionToTop();
     } else {
       let merged = false;
-      if (topEvent.eventType === event.eventType) {
+      if (typesCanMerge(topEvent.eventType, event.eventType)) {
         const merge = _mergeChangesets(event.backset, topEvent.backset);
         if (merge) {
           topEvent.backset = merge;
