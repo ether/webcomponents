@@ -49,10 +49,14 @@ jobs:
       - name: Build
         run: pnpm build
 
+      # Trusted Publishing (OIDC): no NPM_TOKEN. Requires npm >= 11.5.1 and a
+      # trusted publisher configured for this package on npmjs.com pointing at
+      # this repo + workflow. npm authenticates via the id-token and attaches
+      # build provenance automatically.
+      - name: Update npm for trusted publishing
+        run: npm install -g npm@latest
       - name: Publish
-        run: pnpm publish --access public --no-git-checks
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public
 
       - name: Commit, tag & push
         run: |
