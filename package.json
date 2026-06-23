@@ -66,14 +66,5 @@
     "typescript": "^6.0.2",
     "vite": "^8.0.7",
     "vitest": "^4.1.3"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild",
-      "playwright"
-    ],
-    "overrides": {
-      "etherpad-webcomponents": "link:../../AppData/Local/pnpm/global/5/node_modules/etherpad-webcomponents"
-    }
   }
 }
