@@ -27,8 +27,8 @@ export class EpDropdown extends LitElement {
       overflow-y: auto;
       background: var(--bg-color, white);
       border: 1px solid var(--middle-color, #d2d2d2);
-      border-radius: 5px;
-      box-shadow: 0 0 0 1px rgba(99, 114, 130, 0.16), 0 8px 16px rgba(27, 39, 51, 0.08);
+      border-radius: var(--radius-large, 5px);
+      box-shadow: var(--shadow, 0 0 0 1px rgba(99, 114, 130, 0.16), 0 8px 16px rgba(27, 39, 51, 0.08));
       z-index: 9999;
       padding: 4px 0;
       opacity: 0;

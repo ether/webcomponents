@@ -93,7 +93,7 @@ export class EpCheckbox extends LitElement {
     }
 
     :host(:focus-within) .track {
-      outline: 2px solid var(--dark-color, #576273);
+      outline: 2px solid var(--focus-color, var(--dark-color, #576273));
       outline-offset: 2px;
     }
 
@@ -112,7 +112,7 @@ export class EpCheckbox extends LitElement {
       <div class="track" @click="${this._toggle}">
         <div class="thumb"></div>
       </div>
-      <input type="checkbox"
+      <input type="checkbox" role="switch"
              .checked="${this.checked}"
              ?disabled="${this.disabled}"
              @change="${this._toggle}"

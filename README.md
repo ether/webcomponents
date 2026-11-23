@@ -13,8 +13,8 @@ Because they are standard custom elements, the components work in any page or fr
 ## Install
 
 ```bash
-pnpm add etherpad-webcomponents
-# or: npm install etherpad-webcomponents
+pnpm add @samtv12345/etherpad-webcomponents
+# or: npm install @samtv12345/etherpad-webcomponents
 ```
 
 ## Usage
@@ -23,10 +23,10 @@ Import the whole library, or just the components you need (each is individually 
 
 ```js
 // everything
-import 'etherpad-webcomponents';
+import '@samtv12345/etherpad-webcomponents';
 
 // or a single component
-import 'etherpad-webcomponents/EpButton.js';
+import '@samtv12345/etherpad-webcomponents/EpButton.js';
 ```
 
 ```html
@@ -42,7 +42,7 @@ import 'etherpad-webcomponents/EpButton.js';
 The named exports (classes) are also available for programmatic use:
 
 ```js
-import { EpButton, EpTheme, themes } from 'etherpad-webcomponents';
+import { EpButton, EpTheme, themes } from '@samtv12345/etherpad-webcomponents';
 ```
 
 ---
@@ -64,17 +64,48 @@ import { EpButton, EpTheme, themes } from 'etherpad-webcomponents';
 | `<ep-toast-container>` / `<ep-toast-item>` | `EpToastContainer` / `EpToastItem` | `position`, `type`, `message`, `duration` | — |
 | `<ep-toolbar-select>` | `EpToolbarSelect` | `options[]`, `value`, `icon-class`, `label`, `placeholder` | `ep-toolbar-select:change` |
 | `<ep-user-badge>` | `EpUserBadge` | `name`, `color`, `size`, `online` | — |
-| `<ep-theme>` | `EpTheme` | `name` — applies a token set to its subtree | — |
+| `<ep-tabs>` / `<ep-tab>` | `EpTabs` / `EpTab` | `value`, `variant` (`underline`/`pills`); tab: `value`, `label`, `disabled` | `ep-tab-change` |
+| `<ep-theme>` | `EpTheme` | `name` (incl. `auto`), `light`, `dark`, `.tokens` — applies a token set to its subtree | `ep-theme-change` |
 | `<ep-editor>` | `EpEditor` | `content`, `readonly`, `wrap`, `author-id` | `ready`, `content-changed`, `selection-changed` |
 
 ### Theming
 
-Components read CSS custom properties (`--text-color`, `--primary-color`, `--bg-soft-color`, …). Wrap a subtree in `<ep-theme name="…">` to apply a token set. Built-in themes: **`colibris`** (default, matches Etherpad's skin), **`colibris-dark`**, **`high-contrast`**, and **`warm`**. Register your own at runtime:
+Components only read CSS custom properties, so every colour, radius and shadow can be changed without touching the components. Built-in themes: **`colibris`** (default, Etherpad's light-green skin), **`colibris-dark`**, **`high-contrast`** and **`warm`**.
+
+| Token | Used for |
+| --- | --- |
+| `--bg-color`, `--bg-soft-color`, `--light-color`, `--super-light-color` | surfaces |
+| `--text-color`, `--text-soft-color`, `--dark-color`, `--super-dark-color` | text, icons |
+| `--middle-color` | borders |
+| `--primary-color`, `--primary-text-color` | accent and text on the accent |
+| `--danger-color`, `--success-color`, `--warning-color` | states |
+| `--focus-color` | focus ring |
+| `--radius`, `--radius-large`, `--shadow` | shape and elevation |
+| `--main-font-family` | font |
+
+A theme only needs to state what differs from its base:
 
 ```js
-import { EpTheme } from 'etherpad-webcomponents';
-EpTheme.registerTheme('brand', { '--primary-color': '#ff5722', /* …all ThemeTokens */ });
+import { defineTheme } from '@samtv12345/etherpad-webcomponents';
+
+defineTheme('acme', { '--primary-color': '#7c3aed' });                  // based on colibris
+defineTheme('acme-dark', { '--primary-color': '#a78bfa' }, 'colibris-dark');
 ```
+
+```html
+<!-- fixed theme -->
+<ep-theme name="acme">…</ep-theme>
+
+<!-- follow the operating system -->
+<ep-theme name="auto" light="acme" dark="acme-dark">…</ep-theme>
+```
+
+`<ep-theme>` sets `data-scheme="light|dark"` on itself, fires `ep-theme-change` and updates live when a theme is redefined. Single tokens can be overridden per element with the `tokens` property. Without the element:
+
+- `applyTheme(document.documentElement, 'acme')` sets the tokens on any element (and removes tokens of the previous call that the new set lacks),
+- `themeToCss('acme', ':root')` returns the tokens as a CSS rule, e.g. for rendering them server-side.
+
+`@samtv12345/etherpad-webcomponents/themes.js` contains only these functions and the token sets, without any custom element.
 
 ### The editor (`<ep-editor>`)
 
@@ -99,7 +130,7 @@ const pending = ed.prepareUserChangeset();   // { changeset, apool } to send to 
 The lower-level engine pieces are also exported for advanced use:
 
 ```js
-import { AceEditor, AttributePool, makeChangesetTracker } from 'etherpad-webcomponents';
+import { AceEditor, AttributePool, makeChangesetTracker } from '@samtv12345/etherpad-webcomponents';
 ```
 
 ---

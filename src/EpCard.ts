@@ -14,8 +14,8 @@ export class EpCard extends LitElement {
 
     .card {
       background: var(--bg-color, white);
-      border-radius: 5px;
-      box-shadow: 0 0 0 1px rgba(99, 114, 130, 0.16), 0 8px 16px rgba(27, 39, 51, 0.08);
+      border-radius: var(--radius-large, 5px);
+      box-shadow: var(--shadow, 0 0 0 1px rgba(99, 114, 130, 0.16), 0 8px 16px rgba(27, 39, 51, 0.08));
       overflow: hidden;
     }
 

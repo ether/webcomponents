@@ -52,7 +52,7 @@ export class EpColorPicker extends LitElement {
       background: var(--bg-color, white);
       border: 1px solid var(--middle-color, #d2d2d2);
       border-radius: 5px;
-      box-shadow: 0 0 0 1px rgba(99, 114, 130, 0.16), 0 8px 16px rgba(27, 39, 51, 0.08);
+      box-shadow: var(--shadow, 0 0 0 1px rgba(99, 114, 130, 0.16), 0 8px 16px rgba(27, 39, 51, 0.08));
     }
 
     .swatch {
@@ -74,7 +74,7 @@ export class EpColorPicker extends LitElement {
     .swatch:hover { transform: scale(1.1); }
 
     .swatch:focus-visible {
-      outline: 2px solid var(--dark-color, #576273);
+      outline: 2px solid var(--focus-color, var(--dark-color, #576273));
       outline-offset: 2px;
     }
 

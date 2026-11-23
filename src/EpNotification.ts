@@ -46,8 +46,8 @@ export class EpNotification extends LitElement {
   static styles = css`
     :host {
       --ep-font: var(--main-font-family, Quicksand, Cantarell, "Open Sans", "Helvetica Neue", sans-serif);
-      --ep-radius: 5px;
-      --ep-shadow: 0 0 0 1px rgba(99, 114, 130, 0.16), 0 8px 16px rgba(27, 39, 51, 0.08);
+      --ep-radius: var(--radius-large, 5px);
+      --ep-shadow: var(--shadow, 0 0 0 1px rgba(99, 114, 130, 0.16), 0 8px 16px rgba(27, 39, 51, 0.08));
 
       display: block;
       pointer-events: auto;
@@ -86,11 +86,11 @@ export class EpNotification extends LitElement {
     }
 
     :host([type="success"]) .notification {
-      border-left-color: var(--primary-color, #64d29b);
+      border-left-color: var(--success-color, var(--primary-color, #64d29b));
     }
 
     :host([type="error"]) .notification {
-      border-left-color: #d1242f;
+      border-left-color: var(--danger-color, #d1242f);
     }
 
     :host([type="info"]) .notification {
@@ -104,8 +104,8 @@ export class EpNotification extends LitElement {
       margin-top: 1px;
     }
 
-    :host([type="success"]) .icon { color: var(--primary-color, #64d29b); }
-    :host([type="error"]) .icon { color: #d1242f; }
+    :host([type="success"]) .icon { color: var(--success-color, var(--primary-color, #64d29b)); }
+    :host([type="error"]) .icon { color: var(--danger-color, #d1242f); }
     :host([type="info"]) .icon { color: var(--dark-color, #576273); }
 
     .body { flex: 1; min-width: 0; word-wrap: break-word; }

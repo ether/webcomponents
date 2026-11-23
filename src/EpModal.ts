@@ -43,8 +43,8 @@ export class EpModal extends LitElement {
     .dialog {
       position: relative; z-index: 1;
       background: var(--bg-color, white);
-      border-radius: 5px;
-      box-shadow: 0 0 0 1px rgba(99, 114, 130, 0.16), 0 8px 16px rgba(27, 39, 51, 0.08);
+      border-radius: var(--radius-large, 5px);
+      box-shadow: var(--shadow, 0 0 0 1px rgba(99, 114, 130, 0.16), 0 8px 16px rgba(27, 39, 51, 0.08));
       max-width: 480px; width: calc(100vw - 32px);
       max-height: calc(100vh - 64px); overflow: auto;
       animation: ep-modal-scale-in 0.2s ease; outline: none;
@@ -58,14 +58,14 @@ export class EpModal extends LitElement {
       background: none; border: none; cursor: pointer; padding: 4px;
       margin: -4px -4px 0 8px; color: var(--text-soft-color, #576273);
       opacity: 0.5; transition: opacity 0.15s ease; font-size: 18px; line-height: 1;
-      display: flex; align-items: center; justify-content: center; border-radius: 4px;
+      display: flex; align-items: center; justify-content: center; border-radius: var(--radius, 4px);
     }
     .close-btn:hover, .close-btn:focus-visible { opacity: 1; }
     .close-btn:focus-visible { outline: 2px solid var(--primary-color, #64d29b); outline-offset: 2px; }
     .body { padding: 20px 25px; line-height: 1.6; }
     .actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 0 25px 20px; }
     .actions ::slotted(button), .actions button {
-      padding: 5px 20px; border-radius: 4px; font-size: 14px; font-weight: 700;
+      padding: 5px 20px; border-radius: var(--radius, 4px); font-size: 14px; font-weight: 700;
       text-transform: uppercase; cursor: pointer;
       transition: background 0.15s ease, border-color 0.15s ease;
       font-family: inherit; line-height: 1.5;
@@ -76,7 +76,7 @@ export class EpModal extends LitElement {
     .btn-confirm:hover { background: var(--dark-color, #576273); }
     .prompt-input {
       width: 100%; box-sizing: border-box; padding: 8px 10px;
-      border: 1px solid var(--middle-color, #d2d2d2); border-radius: 3px;
+      border: 1px solid var(--middle-color, #d2d2d2); border-radius: calc(var(--radius, 4px) - 1px);
       font-size: 14px; font-family: inherit;
       background: var(--bg-soft-color, #f2f3f4); color: var(--text-color, #485365);
       margin-top: 12px; outline: none; transition: border-color 0.15s ease;
@@ -207,7 +207,7 @@ export class EpModal extends LitElement {
       const input = document.createElement('input');
       input.type = 'text';
       input.placeholder = options.placeholder ?? '';
-      input.style.cssText = 'width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--middle-color,#d2d2d2);border-radius:3px;font-size:14px;margin-top:12px;outline:none;background:var(--bg-soft-color,#f2f3f4);color:var(--text-color,#485365);';
+      input.style.cssText = 'width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--middle-color,#d2d2d2);border-radius:calc(var(--radius, 4px) - 1px);font-size:14px;margin-top:12px;outline:none;background:var(--bg-soft-color,#f2f3f4);color:var(--text-color,#485365);';
       container.append(msg, input);
       modal.appendChild(container);
       const actions = document.createElement('div');

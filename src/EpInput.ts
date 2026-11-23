@@ -30,7 +30,7 @@ export class EpInput extends LitElement {
       margin: 0;
       padding: 8px 10px;
       border: 1px solid var(--middle-color, #d2d2d2);
-      border-radius: 3px;
+      border-radius: calc(var(--radius, 4px) - 1px);
       font-size: 14px;
       background: var(--bg-soft-color, #f2f3f4);
       color: var(--text-color, #485365);
@@ -65,13 +65,13 @@ export class EpInput extends LitElement {
 
     :host([error]) input,
     :host([error]) textarea {
-      border-color: #d1242f;
+      border-color: var(--danger-color, #d1242f);
     }
 
     .error-text {
       font-family: var(--ep-font);
       font-size: 12px;
-      color: #d1242f;
+      color: var(--danger-color, #d1242f);
       margin-top: 4px;
     }
   `;

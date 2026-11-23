@@ -1,7 +1,9 @@
 import { html } from 'lit';
 import type { Meta, StoryObj } from '@storybook/web-components';
 import { expect } from 'storybook/test';
-import { themes, EpTheme } from '../src/EpTheme.js';
+import { themes, EpTheme, defineTheme, applyTheme } from '../src/EpTheme.js';
+import '../src/EpTabs.js';
+import '../src/EpToast.js';
 import '../src/EpButton.js';
 import '../src/EpCard.js';
 import '../src/EpInput.js';
@@ -321,4 +323,114 @@ export const Warm: Story = {
       </div>
     </ep-theme>
   `,
+};
+
+/**
+ * A custom theme only states what differs from its base – here the accent
+ * colour – and single tokens can be overridden per element via `.tokens`.
+ */
+export const CustomAccent: Story = {
+  render: () => {
+    defineTheme('story-violet', { '--primary-color': '#7c3aed', '--primary-text-color': '#ffffff' });
+    return html`
+      <ep-theme name="story-violet" id="violet">
+        <div style="padding: 24px; background: var(--bg-color);">
+          <ep-button variant="primary">Violet</ep-button>
+          <ep-checkbox checked label="Accent coloured switch"></ep-checkbox>
+        </div>
+      </ep-theme>
+      <ep-theme name="colibris" id="override" .tokens=${{ '--primary-color': '#e11d48' }}>
+        <div style="padding: 24px; background: var(--bg-color);">
+          <ep-button variant="primary">Override</ep-button>
+        </div>
+      </ep-theme>
+    `;
+  },
+  play: async ({ canvasElement }) => {
+    const violet = canvasElement.querySelector('#violet') as EpTheme;
+    const override = canvasElement.querySelector('#override') as EpTheme;
+    await violet.updateComplete;
+    await override.updateComplete;
+    await expect(violet.style.getPropertyValue('--primary-color')).toBe('#7c3aed');
+    await expect(violet.style.getPropertyValue('--bg-color')).toBe(themes.colibris['--bg-color']);
+    await expect(override.style.getPropertyValue('--primary-color')).toBe('#e11d48');
+
+    // Redefining a theme updates live elements.
+    defineTheme('story-violet', { '--primary-color': '#5b21b6' });
+    await expect(violet.style.getPropertyValue('--primary-color')).toBe('#5b21b6');
+
+    // Switching themes sets data-scheme and fires ep-theme-change.
+    let changed = '';
+    violet.addEventListener('ep-theme-change', (e) => { changed = (e as CustomEvent).detail.name; }, { once: true });
+    violet.name = 'colibris-dark';
+    await violet.updateComplete;
+    await expect(changed).toBe('colibris-dark');
+    await expect(violet.dataset.scheme).toBe('dark');
+  },
+};
+
+export const Auto: Story = {
+  render: () => html`
+    <ep-theme name="auto" light="colibris" dark="colibris-dark" id="auto">
+      <div style="padding: 24px; background: var(--bg-color); color: var(--text-color);">
+        Follows the operating system (light / dark).
+      </div>
+    </ep-theme>
+  `,
+  play: async ({ canvasElement }) => {
+    const el = canvasElement.querySelector('#auto') as EpTheme;
+    await el.updateComplete;
+    const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+    await expect(el.resolvedName).toBe(dark ? 'colibris-dark' : 'colibris');
+    await expect(el.style.getPropertyValue('--bg-color')).toBe(
+      themes[dark ? 'colibris-dark' : 'colibris']['--bg-color'],
+    );
+  },
+};
+
+export const ApplyToElement: Story = {
+  render: () => html`<div id="target" style="padding: 24px; background: var(--bg-color);">target</div>`,
+  play: async ({ canvasElement }) => {
+    const el = canvasElement.querySelector('#target') as HTMLElement;
+    applyTheme(el, { '--primary-color': '#111111', '--my-extra': '1px' });
+    await expect(el.style.getPropertyValue('--my-extra')).toBe('1px');
+    // Tokens of the previous call that the new set lacks are removed.
+    applyTheme(el, 'colibris');
+    await expect(el.style.getPropertyValue('--my-extra')).toBe('');
+    await expect(el.style.getPropertyValue('--primary-color')).toBe('#64d29b');
+  },
+};
+
+export const SchemeDetection: Story = {
+  render: () => html`
+    <ep-theme name="colibris" id="named" .tokens=${{ '--bg-color': 'black' }}></ep-theme>
+    <ep-theme name="colibris" id="hsl" .tokens=${{ '--bg-color': 'hsl(220 20% 10%)' }}></ep-theme>
+    <ep-theme name="colibris-dark" id="light-override" .tokens=${{ '--bg-color': '#ffffff' }}></ep-theme>
+    <ep-theme name="colibris" id="forced" .tokens=${{ '--color-scheme': 'dark' }}></ep-theme>
+  `,
+  play: async ({ canvasElement }) => {
+    const scheme = async (id: string) => {
+      const el = canvasElement.querySelector(`#${id}`) as EpTheme;
+      await el.updateComplete;
+      return el.dataset.scheme;
+    };
+    await expect(await scheme('named')).toBe('dark');
+    await expect(await scheme('hsl')).toBe('dark');
+    await expect(await scheme('light-override')).toBe('light');
+    await expect(await scheme('forced')).toBe('dark');
+  },
+};
+
+export const SuccessUsesItsOwnToken: Story = {
+  render: () => html`
+    <ep-theme name="colibris" .tokens=${{ '--success-color': 'rgb(1, 2, 3)', '--primary-color': 'rgb(200, 0, 0)' }}>
+      <ep-toast-item type="success" message="Saved"></ep-toast-item>
+    </ep-theme>
+  `,
+  play: async ({ canvasElement }) => {
+    const toast = canvasElement.querySelector('ep-toast-item') as HTMLElement & { updateComplete: Promise<unknown> };
+    await toast.updateComplete;
+    const box = toast.shadowRoot!.querySelector('.toast')!;
+    await expect(getComputedStyle(box).borderLeftColor).toBe('rgb(1, 2, 3)');
+  },
 };
