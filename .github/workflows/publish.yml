@@ -68,5 +68,10 @@ jobs:
             git commit -m "release: v${{ inputs.version }}"
             git push origin HEAD:main
           fi
-          git tag "v${{ inputs.version }}"
-          git push origin "v${{ inputs.version }}"
+          # A tag created beforehand (e.g. with a GitHub release) is kept.
+          if git rev-parse -q --verify "refs/tags/v${{ inputs.version }}" >/dev/null; then
+            echo "Tag v${{ inputs.version }} already exists, not re-tagging"
+          else
+            git tag "v${{ inputs.version }}"
+            git push origin "v${{ inputs.version }}"
+          fi
