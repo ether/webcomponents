@@ -30,7 +30,7 @@ export class EpInput extends LitElement {
       margin: 0;
       padding: 8px 10px;
       border: 1px solid var(--middle-color, #d2d2d2);
-      border-radius: var(--radius, 3px);
+      border-radius: calc(var(--radius, 4px) - 1px);
       font-size: 14px;
       background: var(--bg-soft-color, #f2f3f4);
       color: var(--text-color, #485365);

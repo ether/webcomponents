@@ -77,8 +77,9 @@ export class EpTheme extends LitElement {
       console.warn(`ep-theme: unknown theme "${name}"`);
       return;
     }
-    applyTheme(this, { ...base, ...this.tokens });
-    this.dataset.scheme = isDark(base) ? 'dark' : 'light';
+    const merged = { ...base, ...this.tokens } as ThemeTokens;
+    applyTheme(this, merged);
+    this.dataset.scheme = isDark(merged, resolveColor(merged['--bg-color'])) ? 'dark' : 'light';
     if (this._current !== name) {
       this._current = name;
       this.dispatchEvent(new CustomEvent('ep-theme-change', {
@@ -101,6 +102,30 @@ export class EpTheme extends LitElement {
   static get themeNames(): string[] {
     return Object.keys(themes);
   }
+}
+
+let probe: HTMLElement | undefined;
+
+/**
+ * Lets the browser turn any CSS colour (named, hsl(), color-mix(), …) into
+ * rgb(), so isDark() can judge it. Returns undefined outside a browser.
+ */
+function resolveColor(value: string | undefined): string | undefined {
+  if (!value || typeof document === 'undefined' || !document.body) return undefined;
+  if (!probe) {
+    probe = document.createElement('span');
+    probe.setAttribute('aria-hidden', 'true');
+    probe.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden;pointer-events:none;';
+  }
+  probe.style.backgroundColor = '';
+  probe.style.backgroundColor = value;
+  if (!probe.style.backgroundColor) return undefined; // invalid colour
+  document.body.appendChild(probe);
+  const rgb = getComputedStyle(probe).backgroundColor;
+  probe.remove();
+  // Fully transparent (e.g. an unresolved var()) says nothing about the scheme.
+  if (/^rgba\(.*[,/]\s*0\)$/.test(rgb) || rgb === 'transparent') return undefined;
+  return rgb;
 }
 
 declare global {

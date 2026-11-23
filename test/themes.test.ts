@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { defineTheme, getTheme, isDark, onThemeDefined, themeToCss, themes } from '../src/themes.js';
+import { defineTheme, getTheme, isDark, onThemeDefined, parseColor, themeToCss, themes } from '../src/themes.js';
 
 describe('themes', () => {
   it('ships colibris as complete default', () => {
@@ -33,15 +33,40 @@ describe('themes', () => {
     expect(seen).toEqual(['test-notify']);
   });
 
-  it('themeToCss renders a rule and strips injection characters', () => {
-    const css = themeToCss({ '--primary-color': 'red; } body { display:none' }, '.x');
-    expect(css).toBe('.x {\n  --primary-color: red  body  display:none;\n}');
+  it('themeToCss renders a rule', () => {
+    expect(themeToCss({ '--primary-color': 'red', '--radius': '4px' }, '.x')).toBe(
+      '.x {\n  --primary-color: red;\n  --radius: 4px;\n}',
+    );
     expect(themeToCss('colibris')).toContain('--primary-color: #64d29b;');
     expect(() => themeToCss('nope')).toThrow(/unknown theme/);
+  });
+
+  it('themeToCss rejects unsafe names and values instead of stripping them', () => {
+    expect(() => themeToCss({ '--primary-color': 'red; } body { display:none' })).toThrow(/invalid value/);
+    expect(() => themeToCss({ '--x': '</style><script>' })).toThrow(/invalid value/);
+    expect(() => themeToCss({ '--x': 'a\\62 ' })).toThrow(/invalid value/);
+    expect(() => themeToCss({ ['--x} body{' as '--x']: 'red' })).toThrow(/invalid token name/);
+    expect(() => themeToCss({ ['color' as '--x']: 'red' })).toThrow(/invalid token name/);
+  });
+
+  it('parseColor understands hex, rgb() and some names', () => {
+    expect(parseColor('#fff')).toEqual([255, 255, 255]);
+    expect(parseColor('#00000080')).toEqual([0, 0, 0]);
+    expect(parseColor('rgb(10, 20, 30)')).toEqual([10, 20, 30]);
+    expect(parseColor('rgba(10 20 30 / 0.5)')).toEqual([10, 20, 30]);
+    expect(parseColor('rgb(100%, 0%, 0%)')).toEqual([255, 0, 0]);
+    expect(parseColor('Black')).toEqual([0, 0, 0]);
+    expect(parseColor('hsl(0 0% 0%)')).toBeUndefined();
   });
 
   it('isDark looks at the background colour', () => {
     expect(isDark(themes.colibris)).toBe(false);
     expect(isDark(themes['colibris-dark'])).toBe(true);
+    expect(isDark({ '--bg-color': 'black' })).toBe(true);
+    expect(isDark({ '--bg-color': 'rgb(0, 0, 0)' })).toBe(true);
+    expect(isDark({ '--bg-color': 'hsl(0 0% 0%)' })).toBe(false);
+    expect(isDark({ '--bg-color': 'hsl(0 0% 0%)' }, 'rgb(0, 0, 0)')).toBe(true);
+    expect(isDark({ '--bg-color': 'white', '--color-scheme': 'dark' })).toBe(true);
+    expect(isDark({ '--bg-color': '#000', '--color-scheme': 'light' })).toBe(false);
   });
 });

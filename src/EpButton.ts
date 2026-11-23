@@ -90,7 +90,7 @@ export class EpButton extends LitElement {
       color: var(--text-color, #485365);
       border: none;
       padding: 4px;
-      border-radius: var(--radius, 3px);
+      border-radius: calc(var(--radius, 4px) - 1px);
       min-width: 28px;
       min-height: 28px;
       justify-content: center;

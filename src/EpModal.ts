@@ -76,7 +76,7 @@ export class EpModal extends LitElement {
     .btn-confirm:hover { background: var(--dark-color, #576273); }
     .prompt-input {
       width: 100%; box-sizing: border-box; padding: 8px 10px;
-      border: 1px solid var(--middle-color, #d2d2d2); border-radius: var(--radius, 3px);
+      border: 1px solid var(--middle-color, #d2d2d2); border-radius: calc(var(--radius, 4px) - 1px);
       font-size: 14px; font-family: inherit;
       background: var(--bg-soft-color, #f2f3f4); color: var(--text-color, #485365);
       margin-top: 12px; outline: none; transition: border-color 0.15s ease;
@@ -207,7 +207,7 @@ export class EpModal extends LitElement {
       const input = document.createElement('input');
       input.type = 'text';
       input.placeholder = options.placeholder ?? '';
-      input.style.cssText = 'width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--middle-color,#d2d2d2);border-radius:var(--radius,3px);font-size:14px;margin-top:12px;outline:none;background:var(--bg-soft-color,#f2f3f4);color:var(--text-color,#485365);';
+      input.style.cssText = 'width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--middle-color,#d2d2d2);border-radius:calc(var(--radius, 4px) - 1px);font-size:14px;margin-top:12px;outline:none;background:var(--bg-soft-color,#f2f3f4);color:var(--text-color,#485365);';
       container.append(msg, input);
       modal.appendChild(container);
       const actions = document.createElement('div');

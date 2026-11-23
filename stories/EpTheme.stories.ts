@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from '@storybook/web-components';
 import { expect } from 'storybook/test';
 import { themes, EpTheme, defineTheme, applyTheme } from '../src/EpTheme.js';
 import '../src/EpTabs.js';
+import '../src/EpToast.js';
 import '../src/EpButton.js';
 import '../src/EpCard.js';
 import '../src/EpInput.js';
@@ -397,5 +398,39 @@ export const ApplyToElement: Story = {
     applyTheme(el, 'colibris');
     await expect(el.style.getPropertyValue('--my-extra')).toBe('');
     await expect(el.style.getPropertyValue('--primary-color')).toBe('#64d29b');
+  },
+};
+
+export const SchemeDetection: Story = {
+  render: () => html`
+    <ep-theme name="colibris" id="named" .tokens=${{ '--bg-color': 'black' }}></ep-theme>
+    <ep-theme name="colibris" id="hsl" .tokens=${{ '--bg-color': 'hsl(220 20% 10%)' }}></ep-theme>
+    <ep-theme name="colibris-dark" id="light-override" .tokens=${{ '--bg-color': '#ffffff' }}></ep-theme>
+    <ep-theme name="colibris" id="forced" .tokens=${{ '--color-scheme': 'dark' }}></ep-theme>
+  `,
+  play: async ({ canvasElement }) => {
+    const scheme = async (id: string) => {
+      const el = canvasElement.querySelector(`#${id}`) as EpTheme;
+      await el.updateComplete;
+      return el.dataset.scheme;
+    };
+    await expect(await scheme('named')).toBe('dark');
+    await expect(await scheme('hsl')).toBe('dark');
+    await expect(await scheme('light-override')).toBe('light');
+    await expect(await scheme('forced')).toBe('dark');
+  },
+};
+
+export const SuccessUsesItsOwnToken: Story = {
+  render: () => html`
+    <ep-theme name="colibris" .tokens=${{ '--success-color': 'rgb(1, 2, 3)', '--primary-color': 'rgb(200, 0, 0)' }}>
+      <ep-toast-item type="success" message="Saved"></ep-toast-item>
+    </ep-theme>
+  `,
+  play: async ({ canvasElement }) => {
+    const toast = canvasElement.querySelector('ep-toast-item') as HTMLElement & { updateComplete: Promise<unknown> };
+    await toast.updateComplete;
+    const box = toast.shadowRoot!.querySelector('.toast')!;
+    await expect(getComputedStyle(box).borderLeftColor).toBe('rgb(1, 2, 3)');
   },
 };

@@ -92,3 +92,54 @@ export const UnknownValueFallsBackToFirst: Story = {
     await expect(visible(host)).toEqual(['general']);
   },
 };
+
+export const DuplicateValues: Story = {
+  render: () => html`
+    <ep-tabs>
+      <ep-tab value="a" label="A1"><p>first</p></ep-tab>
+      <ep-tab value="a" label="A2"><p>second</p></ep-tab>
+      <ep-tab value="0" label="Zero"><p>zero</p></ep-tab>
+      <ep-tab label="Positional"><p>positional</p></ep-tab>
+    </ep-tabs>
+  `,
+  play: async ({ canvasElement }) => {
+    const host = await ready(canvasElement);
+    const panels = Array.from(host.querySelectorAll('ep-tab'));
+    const shown = () => panels.filter((t) => !t.hidden).map((t) => t.textContent!.trim());
+    await expect(shown()).toEqual(['first']);
+    // Every tab can still be selected on its own.
+    for (const [i, text] of ['first', 'second', 'zero', 'positional'].entries()) {
+      await userEvent.click(buttons(host)[i]);
+      await host.updateComplete;
+      await expect(shown()).toEqual([text]);
+    }
+  },
+};
+
+export const ArrowKeysStartAtFocusedTab: Story = {
+  render: tabs,
+  play: async ({ canvasElement }) => {
+    const host = await ready(canvasElement);
+    buttons(host)[0].focus();
+    // The application changes the selection while focus stays on "General".
+    host.value = 'plugins';
+    await host.updateComplete;
+    await userEvent.keyboard('{ArrowRight}');
+    await host.updateComplete;
+    await expect(host.value).toBe('users');
+  },
+};
+
+export const PanelsAreLabelled: Story = {
+  render: tabs,
+  play: async ({ canvasElement }) => {
+    const host = await ready(canvasElement);
+    const panel = host.querySelector('ep-tab')!;
+    await expect(panel.getAttribute('role')).toBe('tabpanel');
+    await expect(panel.getAttribute('aria-label')).toBe('General');
+    const btn = buttons(host)[0] as HTMLButtonElement & { ariaControlsElements?: Element[] };
+    if ('ariaControlsElements' in btn) {
+      await expect(btn.ariaControlsElements).toEqual([panel]);
+    }
+  },
+};

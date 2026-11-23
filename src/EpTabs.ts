@@ -99,7 +99,7 @@ export class EpTabs extends LitElement {
     :host([variant="pills"]) button {
       border-bottom: none;
       margin: 0;
-      border-radius: var(--radius, 3px);
+      border-radius: calc(var(--radius, 4px) - 1px);
       padding: 5px 12px;
     }
 
@@ -142,30 +142,65 @@ export class EpTabs extends LitElement {
     this._tabs = Array.from(this.children).filter(
       (c): c is EpTab => c instanceof EpTab,
     );
+    this._keys = this._computeKeys();
     this._sync();
   };
 
-  private _valueOf(tab: EpTab, i: number) {
-    return tab.value || String(i);
+  /** Unique key per tab: its value, its position if it has none. */
+  private _keys: string[] = [];
+
+  private _computeKeys(): string[] {
+    const seen = new Set<string>();
+    return this._tabs.map((tab, i) => {
+      let key = tab.value || String(i);
+      if (seen.has(key)) {
+        console.warn(`ep-tabs: duplicate tab value "${key}"; only the first tab can be selected by it`);
+        key = `${key}#${i}`;
+        while (seen.has(key)) key += '#';
+      }
+      seen.add(key);
+      return key;
+    });
+  }
+
+  /** Index of the selected tab (falls back to the first enabled tab), or -1. */
+  private get _selectedIndex(): number {
+    const i = this._keys.indexOf(this.value);
+    if (i >= 0 && !this._tabs[i]?.disabled) return i;
+    return this._tabs.findIndex((t) => !t.disabled);
   }
 
   /** The value actually selected (falls back to the first enabled tab). */
   get selected(): string {
-    const values = this._tabs.map((t, i) => this._valueOf(t, i));
-    const current = this._tabs.find((t, i) => values[i] === this.value && !t.disabled);
-    if (current) return this.value;
-    const first = this._tabs.findIndex((t) => !t.disabled);
-    return first >= 0 ? values[first] : '';
+    const i = this._selectedIndex;
+    return i >= 0 ? this._keys[i] : '';
   }
 
   updated(changed: Map<string, unknown>) {
     if (changed.has('value')) this._sync();
+    this._linkPanels();
   }
 
   private _sync() {
-    const selected = this.selected;
+    const selected = this._selectedIndex;
     this._tabs.forEach((tab, i) => {
-      tab.hidden = this._valueOf(tab, i) !== selected;
+      tab.hidden = i !== selected;
+    });
+  }
+
+  /**
+   * Tab buttons live in the shadow root and panels in the light DOM, so ID
+   * references cannot connect them. Where the browser supports ARIA element
+   * reflection, point each button at its panel; panels carry the tab label
+   * as aria-label in any case.
+   */
+  private _linkPanels() {
+    const buttons = this.renderRoot.querySelectorAll<HTMLButtonElement>('button[role="tab"]');
+    buttons.forEach((btn, i) => {
+      const tab = this._tabs[i];
+      if (tab && 'ariaControlsElements' in btn) {
+        (btn as HTMLButtonElement & { ariaControlsElements: Element[] }).ariaControlsElements = [tab];
+      }
     });
   }
 
@@ -185,10 +220,14 @@ export class EpTabs extends LitElement {
 
   private _onKeydown(e: KeyboardEvent) {
     const enabled = this._tabs
-      .map((t, i) => ({ t, v: this._valueOf(t, i) }))
+      .map((t, i) => ({ t, i }))
       .filter(({ t }) => !t.disabled);
     if (!enabled.length) return;
-    const at = enabled.findIndex(({ v }) => v === this.selected);
+    // Start from the button that has focus, not from the selection: the
+    // application may have changed the value meanwhile.
+    const focused = (e.target as HTMLElement | null)?.closest?.('button[role="tab"]') as HTMLButtonElement | null;
+    const from = focused ? Number(focused.dataset.index) : this._selectedIndex;
+    const at = enabled.findIndex(({ i }) => i === from);
     let next = -1;
     switch (e.key) {
       case 'ArrowRight': next = (at + 1) % enabled.length; break;
@@ -198,16 +237,16 @@ export class EpTabs extends LitElement {
       default: return;
     }
     e.preventDefault();
-    this._select(enabled[next].v, true);
+    this._select(this._keys[enabled[next].i], true);
   }
 
   render() {
-    const selected = this.selected;
+    const selected = this._selectedIndex;
     return html`
       <div role="tablist" part="tablist" @keydown=${this._onKeydown}>
         ${this._tabs.map((tab, i) => {
-          const v = this._valueOf(tab, i);
-          const isSel = v === selected;
+          const v = this._keys[i];
+          const isSel = i === selected;
           return html`<button
             role="tab"
             part="tab"
@@ -216,6 +255,7 @@ export class EpTabs extends LitElement {
             tabindex=${isSel ? '0' : '-1'}
             ?disabled=${tab.disabled}
             data-value=${v}
+            data-index=${i}
             @click=${() => this._select(v)}
           >${tab.label || v}</button>`;
         })}

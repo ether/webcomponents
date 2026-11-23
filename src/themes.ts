@@ -20,10 +20,12 @@ export interface ThemeTokens {
   '--warning-color'?: string;
   /** Focus ring colour. */
   '--focus-color'?: string;
-  /** Corner radius of small controls (buttons, inputs). */
+  /** Corner radius of buttons; inputs and selects use 1px less. */
   '--radius'?: string;
   /** Corner radius of surfaces (cards, dialogs, menus, toasts). */
   '--radius-large'?: string;
+  /** `light` or `dark`; overrides the detection from `--bg-color`. */
+  '--color-scheme'?: string;
   /** Elevation of floating surfaces. */
   '--shadow'?: string;
   /** Allows extra, app-specific tokens (`--my-token`). */
@@ -56,7 +58,7 @@ export const themes: Record<string, ThemeTokens> = {
     '--success-color': '#64d29b',
     '--warning-color': '#d4a72c',
     '--focus-color': '#576273',
-    '--radius': '3px',
+    '--radius': '4px',
     '--radius-large': '5px',
     '--shadow': SHADOW,
   },
@@ -78,7 +80,7 @@ export const themes: Record<string, ThemeTokens> = {
     '--success-color': '#64d29b',
     '--warning-color': '#e3b341',
     '--focus-color': '#a8adb8',
-    '--radius': '3px',
+    '--radius': '4px',
     '--radius-large': '5px',
     '--shadow': SHADOW_DARK,
   },
@@ -100,7 +102,7 @@ export const themes: Record<string, ThemeTokens> = {
     '--success-color': '#006b2e',
     '--warning-color': '#8a5a00',
     '--focus-color': '#111111',
-    '--radius': '3px',
+    '--radius': '4px',
     '--radius-large': '5px',
     '--shadow': SHADOW,
   },
@@ -122,7 +124,7 @@ export const themes: Record<string, ThemeTokens> = {
     '--success-color': '#5a8a3c',
     '--warning-color': '#b7791f',
     '--focus-color': '#7a6e62',
-    '--radius': '3px',
+    '--radius': '4px',
     '--radius-large': '5px',
     '--shadow': SHADOW,
   },
@@ -158,16 +160,28 @@ export function getTheme(name: string): ThemeTokens | undefined {
   return themes[name];
 }
 
+const TOKEN_NAME = /^--[a-zA-Z0-9_-]+$/;
+const UNSAFE_VALUE = /[;{}<>\\]/;
+
 /**
  * Renders a theme as plain CSS (`selector { --token: value; … }`), for pages
  * that set tokens on `:root` – or server-side – instead of using `<ep-theme>`.
+ *
+ * Token names must look like `--name`, and values must not contain
+ * `; { } < > \`; anything else throws instead of producing broken or
+ * injectable CSS. The selector is written as given and must be trusted.
  */
 export function themeToCss(theme: string | Partial<ThemeTokens>, selector = ':root'): string {
   const tokens = typeof theme === 'string' ? themes[theme] : theme;
   if (!tokens) throw new Error(`ep-theme: unknown theme "${theme}"`);
   const body = Object.entries(tokens)
     .filter(([, v]) => v !== undefined && v !== '')
-    .map(([k, v]) => `  ${k}: ${String(v).replace(/[;{}]/g, '')};`)
+    .map(([k, v]) => {
+      if (!TOKEN_NAME.test(k)) throw new Error(`ep-theme: invalid token name "${k}"`);
+      const value = String(v);
+      if (UNSAFE_VALUE.test(value)) throw new Error(`ep-theme: invalid value for ${k}`);
+      return `  ${k}: ${value};`;
+    })
     .join('\n');
   return `${selector} {\n${body}\n}`;
 }
@@ -207,13 +221,49 @@ export function notifyThemeChanged(name: string) {
   for (const fn of listeners) fn(name);
 }
 
-/** Rough luminance check of `--bg-color`, used for `data-scheme`. */
-export function isDark(tokens: ThemeTokens): boolean {
-  const bg = tokens['--bg-color'].trim().toLowerCase();
-  const m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/.exec(bg);
-  if (!m) return false;
-  const hex = m[1].length === 3 ? m[1].split('').map((c) => c + c).join('') : m[1];
-  const [r, g, b] = [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16));
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b < 128;
+const NAMED_COLORS: Record<string, [number, number, number]> = {
+  black: [0, 0, 0], white: [255, 255, 255],
+  navy: [0, 0, 128], darkslategray: [47, 79, 79], darkslategrey: [47, 79, 79],
+  dimgray: [105, 105, 105], dimgrey: [105, 105, 105], gray: [128, 128, 128], grey: [128, 128, 128],
+  midnightblue: [25, 25, 112], darkblue: [0, 0, 139], indigo: [75, 0, 130],
+  silver: [192, 192, 192], whitesmoke: [245, 245, 245], ivory: [255, 255, 240],
+  snow: [255, 250, 250], ghostwhite: [248, 248, 255], linen: [250, 240, 230],
+};
+
+/**
+ * Parses hex (#rgb, #rgba, #rrggbb, #rrggbbaa), rgb()/rgba() and a few named
+ * colours. Returns undefined for anything else (hsl(), color-mix(), …); in a
+ * browser `<ep-theme>` resolves such values through the CSS engine first.
+ */
+export function parseColor(value: string): [number, number, number] | undefined {
+  const v = value.trim().toLowerCase();
+  if (NAMED_COLORS[v]) return NAMED_COLORS[v];
+  const hex = /^#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/.exec(v);
+  if (hex) {
+    let h = hex[1];
+    if (h.length <= 4) h = h.split('').map((c) => c + c).join('');
+    return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16)) as [number, number, number];
+  }
+  const rgb = /^rgba?\(\s*([\d.]+%?)[\s,]+([\d.]+%?)[\s,]+([\d.]+%?)/.exec(v);
+  if (rgb) {
+    return [rgb[1], rgb[2], rgb[3]].map((c) =>
+      c.endsWith('%') ? Math.round(parseFloat(c) * 2.55) : Math.round(parseFloat(c)),
+    ) as [number, number, number];
+  }
+  return undefined;
 }
 
+/**
+ * Whether a theme has a dark background. Uses `--color-scheme` when the theme
+ * sets it (`light` / `dark`), otherwise the luminance of `--bg-color`.
+ * Unparseable colours count as light.
+ */
+export function isDark(tokens: Partial<ThemeTokens>, resolvedBg?: string): boolean {
+  const scheme = tokens['--color-scheme']?.trim();
+  if (scheme === 'dark') return true;
+  if (scheme === 'light') return false;
+  const rgb = parseColor(resolvedBg ?? tokens['--bg-color'] ?? '');
+  if (!rgb) return false;
+  const [r, g, b] = rgb;
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b < 128;
+}

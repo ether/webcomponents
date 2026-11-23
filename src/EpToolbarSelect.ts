@@ -30,7 +30,7 @@ export class EpToolbarSelect extends LitElement {
       height: 28px;
       padding: 0 8px;
       border: none;
-      border-radius: var(--radius, 3px);
+      border-radius: calc(var(--radius, 4px) - 1px);
       background: transparent;
       color: inherit;
       cursor: pointer;
