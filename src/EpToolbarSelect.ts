@@ -30,7 +30,7 @@ export class EpToolbarSelect extends LitElement {
       height: 28px;
       padding: 0 8px;
       border: none;
-      border-radius: 3px;
+      border-radius: var(--radius, 3px);
       background: transparent;
       color: inherit;
       cursor: pointer;
@@ -44,7 +44,7 @@ export class EpToolbarSelect extends LitElement {
     }
 
     .trigger:focus-visible {
-      outline: 2px solid var(--dark-color, #576273);
+      outline: 2px solid var(--focus-color, var(--dark-color, #576273));
       outline-offset: 1px;
     }
 

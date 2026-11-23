@@ -12,7 +12,7 @@ export class EpButton extends LitElement {
     button {
       font-family: var(--ep-font);
       padding: 5px 20px;
-      border-radius: 4px;
+      border-radius: var(--radius, 4px);
       font-size: 14px;
       font-weight: 700;
       cursor: pointer;
@@ -34,7 +34,7 @@ export class EpButton extends LitElement {
     }
 
     button:focus-visible {
-      outline: 2px solid var(--dark-color, #576273);
+      outline: 2px solid var(--focus-color, var(--dark-color, #576273));
       outline-offset: 2px;
     }
 
@@ -59,7 +59,7 @@ export class EpButton extends LitElement {
        background with bg-coloured (white) text. */
     :host([variant="primary"]) button {
       background: var(--primary-color, #64d29b);
-      color: var(--bg-color, #ffffff);
+      color: var(--primary-text-color, var(--bg-color, #ffffff));
       border: none;
       transition: filter 0.15s ease, opacity 0.15s ease;
     }
@@ -90,7 +90,7 @@ export class EpButton extends LitElement {
       color: var(--text-color, #485365);
       border: none;
       padding: 4px;
-      border-radius: 3px;
+      border-radius: var(--radius, 3px);
       min-width: 28px;
       min-height: 28px;
       justify-content: center;

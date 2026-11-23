@@ -12,9 +12,9 @@ interface ToastOptions {
 }
 
 const toastIconSvg: Record<string, string> = {
-  success: `<svg class="icon" viewBox="0 0 16 16" fill="var(--primary-color, #64d29b)"><path fill-rule="evenodd" d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg>`,
-  error: `<svg class="icon" viewBox="0 0 16 16" fill="#d1242f"><path fill-rule="evenodd" d="M8 15A7 7 0 108 1a7 7 0 000 14zm.75-9.25a.75.75 0 00-1.5 0v4.5a.75.75 0 001.5 0v-4.5zM8 11a1 1 0 100 2 1 1 0 000-2z"/></svg>`,
-  info: `<svg class="icon" viewBox="0 0 16 16" fill="var(--dark-color, #576273)"><path fill-rule="evenodd" d="M8 15A7 7 0 108 1a7 7 0 000 14zm.75-9.25a.75.75 0 00-1.5 0v4.5a.75.75 0 001.5 0v-4.5zM8 11a1 1 0 100 2 1 1 0 000-2z"/></svg>`,
+  success: `<svg class="icon" viewBox="0 0 16 16" style="fill: var(--primary-color, #64d29b)"><path fill-rule="evenodd" d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg>`,
+  error: `<svg class="icon" viewBox="0 0 16 16" style="fill: var(--danger-color, #d1242f)"><path fill-rule="evenodd" d="M8 15A7 7 0 108 1a7 7 0 000 14zm.75-9.25a.75.75 0 00-1.5 0v4.5a.75.75 0 001.5 0v-4.5zM8 11a1 1 0 100 2 1 1 0 000-2z"/></svg>`,
+  info: `<svg class="icon" viewBox="0 0 16 16" style="fill: var(--dark-color, #576273)"><path fill-rule="evenodd" d="M8 15A7 7 0 108 1a7 7 0 000 14zm.75-9.25a.75.75 0 00-1.5 0v4.5a.75.75 0 001.5 0v-4.5zM8 11a1 1 0 100 2 1 1 0 000-2z"/></svg>`,
 };
 
 @customElement('ep-toast-item')
@@ -53,15 +53,15 @@ export class EpToastItem extends LitElement {
       align-items: flex-start;
       gap: 10px;
       padding: 12px 16px;
-      border-radius: 5px;
-      box-shadow: 0 0 0 1px rgba(99, 114, 130, 0.16), 0 8px 16px rgba(27, 39, 51, 0.08);
+      border-radius: var(--radius-large, 5px);
+      box-shadow: var(--shadow, 0 0 0 1px rgba(99, 114, 130, 0.16), 0 8px 16px rgba(27, 39, 51, 0.08));
       background: var(--bg-color, white);
       color: var(--text-color, #485365);
       border-left: 3px solid var(--middle-color, #d2d2d2);
     }
 
     :host([type="success"]) .toast { border-left-color: var(--primary-color, #64d29b); }
-    :host([type="error"]) .toast { border-left-color: #d1242f; }
+    :host([type="error"]) .toast { border-left-color: var(--danger-color, #d1242f); }
     :host([type="info"]) .toast { border-left-color: var(--dark-color, #576273); }
 
     .icon { flex-shrink: 0; width: 16px; height: 16px; margin-top: 2px; }

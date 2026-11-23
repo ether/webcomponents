@@ -1,77 +1,11 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
+import {
+  DEFAULT_THEME, applyTheme, isDark, notifyThemeChanged, onThemeDefined, themes,
+} from './themes.js';
+import type { ThemeTokens } from './themes.js';
 
-export interface ThemeTokens {
-  '--bg-color': string;
-  '--bg-soft-color': string;
-  '--text-color': string;
-  '--text-soft-color': string;
-  '--middle-color': string;
-  '--dark-color': string;
-  '--super-dark-color': string;
-  '--light-color': string;
-  '--super-light-color': string;
-  '--primary-color': string;
-  '--main-font-family': string;
-}
-
-export const themes: Record<string, ThemeTokens> = {
-  colibris: {
-    '--bg-color': 'white',
-    '--bg-soft-color': '#f2f3f4',
-    '--text-color': '#485365',
-    '--text-soft-color': '#576273',
-    '--middle-color': '#d2d2d2',
-    '--dark-color': '#576273',
-    '--super-dark-color': '#485365',
-    '--light-color': '#f2f3f4',
-    '--super-light-color': 'white',
-    '--primary-color': '#64d29b',
-    '--main-font-family': 'Quicksand, Cantarell, "Open Sans", "Helvetica Neue", sans-serif',
-  },
-
-  'colibris-dark': {
-    '--bg-color': '#2c3143',
-    '--bg-soft-color': '#363b50',
-    '--text-color': '#e4e6eb',
-    '--text-soft-color': '#a8adb8',
-    '--middle-color': '#4a5068',
-    '--dark-color': '#a8adb8',
-    '--super-dark-color': '#e4e6eb',
-    '--light-color': '#363b50',
-    '--super-light-color': '#2c3143',
-    '--primary-color': '#64d29b',
-    '--main-font-family': 'Quicksand, Cantarell, "Open Sans", "Helvetica Neue", sans-serif',
-  },
-
-  'high-contrast': {
-    '--bg-color': 'white',
-    '--bg-soft-color': '#f5f5f5',
-    '--text-color': '#111111',
-    '--text-soft-color': '#333333',
-    '--middle-color': '#999999',
-    '--dark-color': '#333333',
-    '--super-dark-color': '#111111',
-    '--light-color': '#f5f5f5',
-    '--super-light-color': 'white',
-    '--primary-color': '#0066cc',
-    '--main-font-family': '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-  },
-
-  warm: {
-    '--bg-color': '#fdfbf7',
-    '--bg-soft-color': '#f5f0e8',
-    '--text-color': '#4a3f35',
-    '--text-soft-color': '#7a6e62',
-    '--middle-color': '#d6cfc5',
-    '--dark-color': '#7a6e62',
-    '--super-dark-color': '#4a3f35',
-    '--light-color': '#f5f0e8',
-    '--super-light-color': '#fdfbf7',
-    '--primary-color': '#c47a4a',
-    '--main-font-family': 'Georgia, "Times New Roman", serif',
-  },
-};
+export * from './themes.js';
 
 @customElement('ep-theme')
 export class EpTheme extends LitElement {
@@ -81,25 +15,75 @@ export class EpTheme extends LitElement {
     }
   `;
 
-  @property({ reflect: true }) name: string = 'colibris';
+  /**
+   * Theme to apply. `auto` follows the operating system and picks `light`
+   * or `dark`.
+   */
+  @property({ reflect: true }) name: string = DEFAULT_THEME;
 
-  updated(changed: Map<string, unknown>) {
-    if (changed.has('name')) {
-      this._applyTokens();
-    }
+  /** Theme used by `name="auto"` in light mode. */
+  @property() light: string = DEFAULT_THEME;
+
+  /** Theme used by `name="auto"` in dark mode. */
+  @property() dark: string = 'colibris-dark';
+
+  /** Single tokens on top of the theme, e.g. `{ '--primary-color': '#7c3aed' }`. */
+  @property({ attribute: false }) tokens: Partial<ThemeTokens> = {};
+
+  private _media?: MediaQueryList;
+  private _onMedia = () => this._applyTokens();
+  private _current = '';
+  private _unsubscribe?: () => void;
+
+  /** Theme name actually in use (resolves `auto`). */
+  get resolvedName(): string {
+    if (this.name !== 'auto') return this.name;
+    return this._media?.matches ? this.dark : this.light;
   }
 
   connectedCallback() {
     super.connectedCallback();
+    this._unsubscribe = onThemeDefined((n) => this.themeUpdated(n));
+    if (typeof matchMedia === 'function') {
+      this._media = matchMedia('(prefers-color-scheme: dark)');
+      this._media.addEventListener('change', this._onMedia);
+    }
     this._applyTokens();
   }
 
-  private _applyTokens() {
-    const tokens = themes[this.name];
-    if (!tokens) return;
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this._unsubscribe?.();
+    this._unsubscribe = undefined;
+    this._media?.removeEventListener('change', this._onMedia);
+    this._media = undefined;
+  }
 
-    for (const [prop, value] of Object.entries(tokens)) {
-      this.style.setProperty(prop, value);
+  updated(changed: Map<string, unknown>) {
+    if (changed.has('name') || changed.has('light') || changed.has('dark') || changed.has('tokens')) {
+      this._applyTokens();
+    }
+  }
+
+  /** @internal called when a theme is (re)defined at runtime. */
+  themeUpdated(name: string) {
+    if (name === this.resolvedName) this._applyTokens();
+  }
+
+  private _applyTokens() {
+    const name = this.resolvedName;
+    const base = themes[name];
+    if (!base) {
+      console.warn(`ep-theme: unknown theme "${name}"`);
+      return;
+    }
+    applyTheme(this, { ...base, ...this.tokens });
+    this.dataset.scheme = isDark(base) ? 'dark' : 'light';
+    if (this._current !== name) {
+      this._current = name;
+      this.dispatchEvent(new CustomEvent('ep-theme-change', {
+        bubbles: true, composed: true, detail: { name },
+      }));
     }
   }
 
@@ -107,9 +91,10 @@ export class EpTheme extends LitElement {
     return html`<slot></slot>`;
   }
 
-  /** Register a custom theme at runtime. */
+  /** Register a custom theme at runtime (full token set). */
   static registerTheme(name: string, tokens: ThemeTokens) {
     themes[name] = tokens;
+    notifyThemeChanged(name);
   }
 
   /** Get all registered theme names. */

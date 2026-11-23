@@ -34,7 +34,7 @@ export class EpSelect extends LitElement {
       height: 28px;
       line-height: 28px;
       padding: 0 25px 0 10px;
-      border-radius: 3px;
+      border-radius: var(--radius, 3px);
       border: 1px solid var(--bg-soft-color, #f2f3f4);
       background-color: var(--bg-soft-color, #f2f3f4);
       color: var(--text-color, #485365);
@@ -81,7 +81,7 @@ export class EpSelect extends LitElement {
       min-width: 100%;
       box-sizing: border-box;
       background-color: var(--bg-soft-color, #f2f3f4);
-      border-radius: 3px;
+      border-radius: var(--radius, 3px);
       box-shadow: 0 0 0 1px rgba(68, 68, 68, 0.11), 0 8px 16px rgba(27, 39, 51, 0.12);
       opacity: 0;
       pointer-events: none;

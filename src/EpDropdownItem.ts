@@ -36,7 +36,7 @@ export class EpDropdownItem extends LitElement {
 
     .item:focus-visible {
       background: var(--bg-soft-color, #f2f3f4);
-      outline: 2px solid var(--dark-color, #576273);
+      outline: 2px solid var(--focus-color, var(--dark-color, #576273));
       outline-offset: -2px;
     }
 
