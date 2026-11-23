@@ -1,5 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
+import { styleMap } from 'lit/directives/style-map.js';
+import { safeColor } from './internal/color.js';
 
 @customElement('ep-chat-message')
 export class EpChatMessage extends LitElement {
@@ -47,7 +49,7 @@ export class EpChatMessage extends LitElement {
 
   render() {
     return html`
-      <b class="author" style="${this.authorColor ? `color: ${this.authorColor}` : ''}">${this.author}</b>${this.time ? html`<span class="time">${this.time}</span>` : html`<span class="time"></span>`}<span class="body"><slot></slot></span>
+      <b class="author" style=${styleMap({ color: safeColor(this.authorColor) })}>${this.author}</b>${this.time ? html`<span class="time">${this.time}</span>` : html`<span class="time"></span>`}<span class="body"><slot></slot></span>
     `;
   }
 }

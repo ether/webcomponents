@@ -64,6 +64,13 @@ import { EpButton, EpTheme, themes } from '@samtv12345/etherpad-webcomponents';
 | `<ep-toast-container>` / `<ep-toast-item>` | `EpToastContainer` / `EpToastItem` | `position`, `type`, `message`, `duration` | — |
 | `<ep-toolbar-select>` | `EpToolbarSelect` | `options[]`, `value`, `icon-class`, `label`, `placeholder` | `ep-toolbar-select:change` |
 | `<ep-user-badge>` | `EpUserBadge` | `name`, `color`, `size`, `online` | — |
+| `<ep-avatar>` | `EpAvatar` | `name`, `color`, `src`, `size`, `status` (`online`/`idle`/`offline`) | — |
+| `<ep-toolbar>` / `<ep-toolbar-button>` / `<ep-toolbar-separator>` | `EpToolbar` / `EpToolbarButton` / `EpToolbarSeparator` | toolbar: `label`, `breakpoint`, `more-label`, slot `end`; button: `key`, `label`, `toggle`, `pressed`, `active`, `expanded`, `badge`, `priority="low"` | `ep-toolbar-action` |
+| `<ep-user-list>` | `EpUserList` | `.users` (`{ id, name, color, self, status }`), `heading`, `selectable`, `readonly` | `ep-user-rename`, `ep-user-color-request`, `ep-user-select` |
+| `<ep-chat-panel>` | `EpChatPanel` | `.messages` or slotted `<ep-chat-message slot="messages">`, `show-close`, `show-sticky`, `sticky`, `has-more`, `loading`, `readonly`, `floating` | `ep-chat-send`, `ep-chat-close`, `ep-chat-sticky`, `ep-chat-load-more` |
+| `<ep-popup>` | `EpPopup` | `open`, `heading`, `anchor`, `align`, `persistent`, slot `footer`; `show()`/`hide()`/`toggle()` | `ep-popup-open`, `ep-popup-close` |
+| `<ep-settings-section>` / `<ep-settings-row>` | `EpSettingsSection` / `EpSettingsRow` | section: `heading`, `description`; row: `label`, `description`, `stacked`, `divided`, `disabled` | — |
+| `<ep-segmented>` | `EpSegmented` | `.options` (`{ value, label, icon?, disabled? }`), `value`, `label` | `ep-change` |
 | `<ep-tabs>` / `<ep-tab>` | `EpTabs` / `EpTab` | `value`, `variant` (`underline`/`pills`); tab: `value`, `label`, `disabled` | `ep-tab-change` |
 | `<ep-theme>` | `EpTheme` | `name` (incl. `auto`), `light`, `dark`, `.tokens` — applies a token set to its subtree | `ep-theme-change` |
 | `<ep-editor>` | `EpEditor` | `content`, `readonly`, `wrap`, `author-id` | `ready`, `content-changed`, `selection-changed` |
@@ -106,6 +113,10 @@ defineTheme('acme-dark', { '--primary-color': '#a78bfa' }, 'colibris-dark');
 - `themeToCss('acme', ':root')` returns the tokens as a CSS rule, e.g. for rendering them server-side.
 
 `@samtv12345/etherpad-webcomponents/themes.js` contains only these functions and the token sets, without any custom element.
+
+### Pad building blocks
+
+The pad, timeslider and sheet pages are put together from `ep-toolbar`, `ep-popup` + `ep-settings-*`, `ep-user-list` and `ep-chat-panel`; the story **Pad/Layout** shows them together. All of them only emit events – the app decides what a toolbar action, a sent chat message or a rename does. Every visible text is an attribute, so pages can pass in their translations. Toolbar colours can be set separately via `--toolbar-bg-color`, `--toolbar-text-color`, `--toolbar-border-color`, `--toolbar-hover-color`, `--toolbar-active-color` and `--toolbar-active-text-color`.
 
 ### The editor (`<ep-editor>`)
 
