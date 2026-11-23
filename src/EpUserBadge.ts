@@ -1,5 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
+import { styleMap } from 'lit/directives/style-map.js';
+import { safeColor } from './internal/color.js';
 
 @customElement('ep-user-badge')
 export class EpUserBadge extends LitElement {
@@ -59,7 +61,7 @@ export class EpUserBadge extends LitElement {
   render() {
     const initial = this.name ? this.name.charAt(0) : '?';
     return html`
-      <div class="avatar" style="background: ${this.color}">
+      <div class="avatar" style=${styleMap({ background: safeColor(this.color) })}>
         ${initial}
       </div>
       ${this.name ? html`<span class="name">${this.name}</span>` : ''}

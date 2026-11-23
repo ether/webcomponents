@@ -106,6 +106,8 @@ export class EpCheckbox extends LitElement {
   @property({ reflect: true }) variant: 'default' | 'retro' = 'default';
   @property({ type: Boolean, reflect: true }) disabled = false;
   @property() label = '';
+  /** Accessible name when no visible `label` is shown (e.g. inside a settings row). */
+  @property({ attribute: 'accessible-name' }) accessibleName = '';
 
   render() {
     return html`
@@ -116,9 +118,13 @@ export class EpCheckbox extends LitElement {
              .checked="${this.checked}"
              ?disabled="${this.disabled}"
              @change="${this._toggle}"
-             aria-label="${this.label}" />
+             aria-label="${this.label || this.accessibleName}" />
       ${this.label ? html`<span class="label" @click="${this._toggle}">${this.label}</span>` : ''}
     `;
+  }
+
+  focus(options?: FocusOptions) {
+    this.renderRoot.querySelector('input')?.focus(options);
   }
 
   private _toggle() {
