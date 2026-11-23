@@ -1,6 +1,6 @@
 {
   "name": "@samtv12345/etherpad-webcomponents",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "Etherpad Web Components built with Lit",
   "type": "module",
   "main": "dist/index.js",
