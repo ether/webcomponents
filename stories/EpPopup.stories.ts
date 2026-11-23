@@ -113,3 +113,101 @@ export const Persistent: StoryObj<Args> = {
     await expect(popup.open).toBe(false);
   },
 };
+
+export const StaysInsideViewport: StoryObj<Args> = {
+  render: () => html`
+    <div style="display:flex;justify-content:flex-end;padding:8px 20px">
+      <button id="edge">Edge</button>
+    </div>
+    <ep-popup anchor="edge" align="start" heading="Start aligned"><p>Content</p></ep-popup>`,
+  play: async ({ canvasElement }) => {
+    const popup = canvasElement.querySelector('ep-popup') as EpPopup;
+    popup.show();
+    await popup.updateComplete;
+    await new Promise((r) => requestAnimationFrame(r));
+    const box = popup.getBoundingClientRect();
+    await expect(box.right).toBeLessThanOrEqual(document.documentElement.clientWidth - 11);
+    await expect(box.left).toBeGreaterThanOrEqual(11);
+  },
+};
+
+export const ClosedByTheApp: StoryObj<Args> = {
+  render: (args) => html`
+    <button id="opener">Open</button>
+    <ep-popup anchor="opener" heading="Controlled" @ep-popup-close=${args.onClose}><button id="inside">Inside</button></ep-popup>`,
+  play: async ({ canvasElement, args }) => {
+    const popup = canvasElement.querySelector('ep-popup') as EpPopup;
+    const opener = canvasElement.querySelector('#opener') as HTMLButtonElement;
+    opener.focus();
+    popup.open = true;
+    await popup.updateComplete;
+    await new Promise((r) => requestAnimationFrame(r));
+    await expect(document.activeElement).toBe(canvasElement.querySelector('#inside'));
+    // The app sets the property directly.
+    popup.open = false;
+    await popup.updateComplete;
+    await expect(args.onClose).toHaveBeenCalledTimes(1);
+    await expect(((args.onClose as ReturnType<typeof fn>).mock.calls[0][0] as CustomEvent).detail).toEqual({ reason: 'api' });
+    await expect(document.activeElement).toBe(opener);
+  },
+};
+
+export const RowSyncsControl: StoryObj<Args> = {
+  render: () => html`
+    <ep-settings-row id="r1" label="Chat" disabled><ep-checkbox id="c1"></ep-checkbox></ep-settings-row>
+    <ep-settings-row id="r2" label="Font"><select id="s1"><option>A</option></select></ep-settings-row>
+    <ep-settings-row id="r3" label="Theme"><ep-segmented id="g1" .options=${[{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }]}></ep-segmented></ep-settings-row>
+    <ep-settings-row id="r4" label="Own"><select id="s2" aria-label="Page label"><option>A</option></select></ep-settings-row>
+    <ep-settings-row id="r5" label="Locked" disabled><select id="s3" disabled><option>A</option></select></ep-settings-row>`,
+  play: async ({ canvasElement }) => {
+    const $ = <T extends Element>(id: string) => canvasElement.querySelector(`#${id}`) as unknown as T;
+    const rows = Array.from(canvasElement.querySelectorAll('ep-settings-row')) as Array<HTMLElement & { updateComplete: Promise<unknown>; label: string; disabled: boolean }>;
+    await Promise.all(rows.map((r) => r.updateComplete));
+
+    // Disabled row → disabled control (keyboard too); re-enabling restores it.
+    const c1 = $<EpCheckbox>('c1');
+    await expect(c1.disabled).toBe(true);
+    rows[0].disabled = false;
+    await rows[0].updateComplete;
+    await expect(c1.disabled).toBe(false);
+    // A control the page disabled stays disabled.
+    rows[4].disabled = false;
+    await rows[4].updateComplete;
+    await expect($<HTMLSelectElement>('s3').disabled).toBe(true);
+
+    // Labels follow the row label, page labels are kept.
+    await expect($<HTMLSelectElement>('s1').getAttribute('aria-label')).toBe('Font');
+    rows[1].label = 'Schriftart';
+    await rows[1].updateComplete;
+    await expect($<HTMLSelectElement>('s1').getAttribute('aria-label')).toBe('Schriftart');
+    await expect($<HTMLSelectElement>('s2').getAttribute('aria-label')).toBe('Page label');
+
+    // The segmented control's radiogroup gets the row label.
+    const g1 = $<EpSegmented>('g1');
+    await g1.updateComplete;
+    await expect(g1.shadowRoot!.querySelector('[role="radiogroup"]')!.getAttribute('aria-label')).toBe('Theme');
+  },
+};
+
+export const SegmentedEdgeCases: StoryObj<Args> = {
+  render: (args) => html`
+    <ep-segmented id="none" @ep-change=${args.onChange}
+      .options=${[{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }, { value: 'c', label: 'C' }]}></ep-segmented>
+    <ep-segmented id="off" disabled value="a" @ep-change=${args.onChange}
+      .options=${[{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }]}></ep-segmented>`,
+  play: async ({ canvasElement, args }) => {
+    const none = canvasElement.querySelector('#none') as EpSegmented;
+    await none.updateComplete;
+    none.focus();
+    await userEvent.keyboard('{ArrowLeft}');
+    await expect(none.value).toBe('c');
+
+    const off = canvasElement.querySelector('#off') as EpSegmented;
+    await off.updateComplete;
+    const radios = Array.from(off.shadowRoot!.querySelectorAll<HTMLButtonElement>('[role="radio"]'));
+    await expect(radios.every((r) => r.disabled)).toBe(true);
+    radios[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    await expect(off.value).toBe('a');
+    await expect(args.onChange).toHaveBeenCalledTimes(1);
+  },
+};

@@ -106,17 +106,57 @@ export class EpSettingsRow extends LitElement {
   }
 
   updated() {
-    this._nameControl();
+    this._syncControl();
   }
 
-  /** Gives the control the row label as accessible name. */
-  private _nameControl() {
+  private _syncControl() {
     const control = this._control();
-    if (!control || !this.label) return;
+    if (!control) return;
+    this._nameControl(control);
+    this._disableControl(control);
+  }
+
+  /**
+   * Gives the control the row label as accessible name. Names set by the row
+   * are marked with `data-ep-row-label` so they follow label changes (e.g. a
+   * language switch); names set by the page are left alone.
+   */
+  private _nameControl(control: HTMLElement) {
+    const ours = control.hasAttribute('data-ep-row-label');
+    const label = this.label;
+    const set = (attr: string) => {
+      if (label) control.setAttribute(attr, label);
+      else control.removeAttribute(attr);
+      if (label) control.setAttribute('data-ep-row-label', attr);
+      else control.removeAttribute('data-ep-row-label');
+    };
     if (control.tagName === 'EP-CHECKBOX') {
-      if (!control.getAttribute('label')) control.setAttribute('accessible-name', this.label);
-    } else if (!control.hasAttribute('aria-label') && !control.hasAttribute('aria-labelledby')) {
-      control.setAttribute('aria-label', this.label);
+      if (ours || (!control.getAttribute('label') && !control.getAttribute('accessible-name'))) set('accessible-name');
+    } else if (control.tagName === 'EP-SEGMENTED') {
+      // Its radiogroup takes the name from the label property.
+      if (ours || !control.getAttribute('label')) set('label');
+    } else if (ours || (!control.hasAttribute('aria-label') && !control.hasAttribute('aria-labelledby'))) {
+      set('aria-label');
+    }
+  }
+
+  /**
+   * A disabled row disables its control too (keyboard included). Controls
+   * that were disabled by the page stay disabled when the row is enabled.
+   */
+  private _disableControl(control: HTMLElement) {
+    const el = control as HTMLElement & { disabled?: boolean };
+    const ours = control.hasAttribute('data-ep-row-disabled');
+    if (this.disabled) {
+      if (!el.disabled && !control.hasAttribute('disabled')) {
+        if ('disabled' in el) el.disabled = true;
+        else control.setAttribute('disabled', '');
+        control.setAttribute('data-ep-row-disabled', '');
+      }
+    } else if (ours) {
+      if ('disabled' in el) el.disabled = false;
+      control.removeAttribute('disabled');
+      control.removeAttribute('data-ep-row-disabled');
     }
   }
 
@@ -137,7 +177,7 @@ export class EpSettingsRow extends LitElement {
         <div class="label" part="label"><slot name="label">${this.label}</slot></div>
         ${this.description ? html`<div class="description" part="description">${this.description}</div>` : nothing}
       </div>
-      <div class="control" part="control"><slot @slotchange=${this._nameControl}></slot></div>
+      <div class="control" part="control"><slot @slotchange=${this._syncControl}></slot></div>
     `;
   }
 }

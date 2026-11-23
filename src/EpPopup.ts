@@ -128,6 +128,8 @@ export class EpPopup extends LitElement {
 
   private _returnFocus: HTMLElement | null = null;
   private _hasFooter = false;
+  private _closeReason: 'escape' | 'outside' | 'button' | 'api' = 'api';
+  private _hadFocus = false;
 
   show() { this.open = true; }
   hide() { this._close('api'); }
@@ -168,15 +170,17 @@ export class EpPopup extends LitElement {
     const a = this._anchorEl();
     if (!a || !this.open) return;
     const r = a.getBoundingClientRect();
+    const viewport = document.documentElement.clientWidth;
+    const width = this.getBoundingClientRect().width || 360;
+    const margin = 12;
     this.style.top = `${Math.round(r.bottom + 6)}px`;
     this.style.setProperty('--ep-popup-top', `${Math.round(r.bottom + 6)}px`);
-    if (this.align === 'start') {
-      this.style.left = `${Math.max(12, Math.round(r.left))}px`;
-      this.style.right = 'auto';
-    } else {
-      this.style.right = `${Math.max(12, Math.round(document.documentElement.clientWidth - r.right))}px`;
-      this.style.left = 'auto';
-    }
+    // Keep the whole panel inside the viewport on both sides.
+    const maxLeft = Math.max(margin, viewport - width - margin);
+    let left = this.align === 'start' ? r.left : r.right - width;
+    left = Math.min(Math.max(margin, left), maxLeft);
+    this.style.left = `${Math.round(left)}px`;
+    this.style.right = 'auto';
   };
 
   private _onOutside = (e: PointerEvent) => {
@@ -197,16 +201,15 @@ export class EpPopup extends LitElement {
 
   private _close(reason: 'escape' | 'outside' | 'button' | 'api') {
     if (!this.open) return;
+    this._closeReason = reason;
     this.open = false;
-    this.dispatchEvent(new CustomEvent('ep-popup-close', {
-      bubbles: true, composed: true, detail: { reason },
-    }));
-    // Only return focus if it was inside the popup (an outside click moves it elsewhere).
-    if (reason !== 'outside') {
-      const target = this._returnFocus ?? this._anchorEl();
-      target?.focus?.();
+  }
+
+  protected willUpdate(changed: Map<string, unknown>) {
+    // Before the panel is hidden: was focus inside it?
+    if (changed.has('open') && !this.open && changed.get('open')) {
+      this._hadFocus = this.matches(':focus-within');
     }
-    this._returnFocus = null;
   }
 
   protected updated(changed: Map<string, unknown>) {
@@ -217,12 +220,29 @@ export class EpPopup extends LitElement {
         this._listen(true);
         this._position();
         this.dispatchEvent(new CustomEvent('ep-popup-open', { bubbles: true, composed: true }));
-        requestAnimationFrame(() => this._focusFirst());
+        requestAnimationFrame(() => { this._position(); this._focusFirst(); });
       } else if (was) {
-        this._listen(false);
+        this._didClose();
       }
     }
     if (changed.has('anchor') || changed.has('align')) this._position();
+  }
+
+  /** Runs for every way of closing, including `open = false` set by the app. */
+  private _didClose() {
+    const reason = this._closeReason;
+    this._closeReason = 'api';
+    this._listen(false);
+    this.dispatchEvent(new CustomEvent('ep-popup-close', {
+      bubbles: true, composed: true, detail: { reason },
+    }));
+    // Return focus only if it was in the popup (an outside click put it elsewhere).
+    if (this._hadFocus && reason !== 'outside') {
+      const target = this._returnFocus ?? this._anchorEl();
+      target?.focus?.();
+    }
+    this._hadFocus = false;
+    this._returnFocus = null;
   }
 
   private _focusFirst() {

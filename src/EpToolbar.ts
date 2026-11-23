@@ -255,9 +255,10 @@ export class EpToolbar extends LitElement {
 
   /** In compact mode low-priority buttons go to the overflow slot. */
   private _placeItems() {
-    for (const el of Array.from(this.querySelectorAll<HTMLElement>('[priority="low"]'))) {
-      if (el.parentElement !== this) continue;
-      if (this.compact) {
+    // Current low-priority items plus those moved earlier (their priority may have changed).
+    for (const el of Array.from(this.children) as HTMLElement[]) {
+      const eligible = this.compact && el.getAttribute('priority') === 'low';
+      if (eligible) {
         if (el.dataset.homeSlot === undefined) el.dataset.homeSlot = el.getAttribute('slot') ?? '';
         if (el.getAttribute('slot') !== 'overflow') el.setAttribute('slot', 'overflow');
       } else if (el.dataset.homeSlot !== undefined) {
@@ -270,7 +271,14 @@ export class EpToolbar extends LitElement {
     this._updateRoving();
   }
 
-  /** Buttons in visual order, without hidden or collapsed ones. */
+  private get _more(): EpToolbarButton | null {
+    return this.renderRoot?.querySelector<EpToolbarButton>('.more') ?? null;
+  }
+
+  /**
+   * Buttons in visual order, without hidden or collapsed ones. In compact
+   * mode the "more" button follows the `end` items.
+   */
   get items(): EpToolbarButton[] {
     const slots = ['', 'end', 'overflow'];
     const all = Array.from(this.querySelectorAll<EpToolbarButton>('ep-toolbar-button'));
@@ -278,16 +286,22 @@ export class EpToolbar extends LitElement {
       const top = Array.from(this.children).find((c) => c === b || c.contains(b));
       return slots.indexOf(top?.getAttribute('slot') ?? '');
     };
-    return all
+    const visible = all
       .filter((b) => !b.hidden && !b.closest('[hidden]'))
       .filter((b) => !(bySlot(b) === 2 && !(this.compact && this.expanded)))
       .sort((a, b) => bySlot(a) - bySlot(b));
+    const more = this._more;
+    if (!this.compact || !more) return visible;
+    const firstOverflow = visible.findIndex((b) => bySlot(b) === 2);
+    if (firstOverflow < 0) return [...visible, more];
+    return [...visible.slice(0, firstOverflow), more, ...visible.slice(firstOverflow)];
   }
 
   private _updateRoving() {
     const items = this.items;
     if (this._focusIndex >= items.length) this._focusIndex = Math.max(0, items.length - 1);
-    for (const b of Array.from(this.querySelectorAll<EpToolbarButton>('ep-toolbar-button'))) {
+    const more = this._more;
+    for (const b of [...Array.from(this.querySelectorAll<EpToolbarButton>('ep-toolbar-button')), ...(more ? [more] : [])]) {
       b.rovingTabIndex = -1;
     }
     if (items[this._focusIndex]) items[this._focusIndex].rovingTabIndex = 0;

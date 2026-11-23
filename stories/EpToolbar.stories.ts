@@ -105,3 +105,26 @@ export const Compact: Story = {
     await expect(low.hasAttribute('slot')).toBe(false);
   },
 };
+
+export const CompactKeyboardAndPriority: Story = {
+  render: (args) => bar(args, '420px'),
+  play: async ({ canvasElement }) => {
+    const tb = await ready(canvasElement);
+    const more = tb.shadowRoot!.querySelector('.more') as EpToolbarButton;
+    // "More" is part of the arrow-key order in compact mode, after the end items.
+    await expect(tb.items[tb.items.length - 1]).toBe(more);
+    inner(tb.items[0]).focus();
+    await userEvent.keyboard('{End}');
+    await expect(more.shadowRoot!.activeElement).toBe(inner(more));
+    await expect(inner(more).tabIndex).toBe(0);
+    await expect(inner(tb.items[0]).tabIndex).toBe(-1);
+
+    // A button that stops being low priority comes back from the overflow row.
+    const low = tb.querySelector('[key="list"]')!;
+    await expect(low.getAttribute('slot')).toBe('overflow');
+    low.setAttribute('priority', 'normal');
+    await new Promise((r) => setTimeout(r, 0));
+    await expect(low.hasAttribute('slot')).toBe(false);
+    await expect(tb.items.includes(low as EpToolbarButton)).toBe(true);
+  },
+};

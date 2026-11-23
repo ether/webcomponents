@@ -104,7 +104,19 @@ export class EpUserList extends LitElement {
   /** Own name and colour cannot be changed (read-only pad). */
   @property({ type: Boolean, reflect: true }) readonly = false;
 
+  /** Last name sent or received for the own entry. */
   private _committed = '';
+  private _lastSelfName: string | undefined;
+
+  protected willUpdate(changed: Map<string, unknown>) {
+    if (!changed.has('users')) return;
+    const name = this.users.find((u) => u.self)?.name ?? '';
+    // Only an actual change of the own name resets the baseline, not every render.
+    if (name !== this._lastSelfName) {
+      this._lastSelfName = name;
+      this._committed = name;
+    }
+  }
 
   private get _sorted(): EpUser[] {
     const self = this.users.filter((u) => u.self);
@@ -137,7 +149,6 @@ export class EpUserList extends LitElement {
   }
 
   private _renderSelf(u: EpUser) {
-    this._committed = u.name ?? '';
     return html`
       <li class="self" part="item self">
         <button class="color-btn" part="color-button" type="button"

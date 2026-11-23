@@ -1,5 +1,5 @@
 import { LitElement, html, css, nothing } from 'lit';
-import { customElement, property, query } from 'lit/decorators.js';
+import { customElement, property, query, state } from 'lit/decorators.js';
 import { repeat } from 'lit/directives/repeat.js';
 import './EpChatMessage.js';
 
@@ -155,11 +155,11 @@ export class EpChatPanel extends LitElement {
   @query('textarea') private _input?: HTMLTextAreaElement;
 
   private _atBottom = true;
-  private _prevHeight = 0;
-  private _prevTop = 0;
-  private _prepended = false;
   private _loadingOlder = false;
   private _resize?: ResizeObserver;
+  /** Message that stays in place while the reader is scrolled up. */
+  private _anchor?: { el: Element; offset: number };
+  @state() private _slotted = 0;
 
   /** Focuses the input. */
   focus(options?: FocusOptions) {
@@ -170,25 +170,14 @@ export class EpChatPanel extends LitElement {
   scrollToBottom() {
     if (this._log) this._log.scrollTop = this._log.scrollHeight;
     this._atBottom = true;
-  }
-
-  protected willUpdate(changed: Map<string, unknown>) {
-    if (!changed.has('messages')) return;
-    const old = (changed.get('messages') as EpChatEntry[] | undefined) ?? [];
-    const now = this.messages;
-    // Older messages were put in front of the existing ones.
-    this._prepended = old.length > 0 && now.length > old.length
-      && now[now.length - 1] === old[old.length - 1] && now[0] !== old[0];
-    if (this._log) {
-      this._prevHeight = this._log.scrollHeight;
-      this._prevTop = this._log.scrollTop;
-    }
+    this._anchor = undefined;
   }
 
   protected firstUpdated() {
     if (typeof ResizeObserver === 'function') {
-      // Late height changes (fonts, wrapped lines) keep the newest message visible.
-      this._resize = new ResizeObserver(() => { if (this._atBottom) this.scrollToBottom(); });
+      // Any height change of the content (new, older or re-rendered
+      // messages, loading row, fonts) goes through _keepPosition.
+      this._resize = new ResizeObserver(() => this._keepPosition());
       this._resize.observe(this.renderRoot.querySelector('.items')!);
     }
   }
@@ -200,33 +189,60 @@ export class EpChatPanel extends LitElement {
   }
 
   protected updated(changed: Map<string, unknown>) {
-    if (changed.has('messages')) void this._afterContentChange(this._prepended);
+    if (changed.has('messages') || changed.has('hasMore')) this._loadingOlder = false;
     if (changed.has('loading') && !this.loading) this._loadingOlder = false;
+    void this._afterRender();
   }
 
-  private async _afterContentChange(prepended = false) {
-    if (!this._log) return;
-    const prevHeight = this._prevHeight;
-    const prevTop = this._prevTop;
-    // Wait until the message elements have rendered, so heights are final.
-    const items = Array.from(this.renderRoot.querySelectorAll('ep-chat-message'))
-      .concat(Array.from(this.querySelectorAll('ep-chat-message'))) as Array<HTMLElement & { updateComplete?: Promise<unknown> }>;
+  /** Waits until the message elements have rendered, then keeps position. */
+  private async _afterRender() {
+    const items = this._messageElements() as Array<Element & { updateComplete?: Promise<unknown> }>;
     await Promise.all(items.map((m) => m.updateComplete));
-    if (prepended) {
-      // Keep the visible messages in place.
-      this._log.scrollTop = prevTop + (this._log.scrollHeight - prevHeight);
-    } else if (this._atBottom) {
-      this.scrollToBottom();
-    }
+    this._keepPosition();
   }
 
-  private _onSlotChange() {
-    void this._afterContentChange();
+  private _messageElements(): Element[] {
+    const own = Array.from(this.renderRoot.querySelectorAll('.items > ep-chat-message'));
+    const slot = this.renderRoot.querySelector<HTMLSlotElement>('slot[name="messages"]');
+    return own.concat(slot?.assignedElements({ flatten: true }) ?? []);
+  }
+
+  /** At the bottom: follow new messages. Scrolled up: keep the anchor still. */
+  private _keepPosition() {
+    const log = this._log;
+    if (!log) return;
+    if (this._atBottom) {
+      log.scrollTop = log.scrollHeight;
+      return;
+    }
+    const a = this._anchor;
+    if (a && a.el.isConnected) {
+      const delta = this._offsetOf(a.el) - a.offset;
+      if (delta !== 0) log.scrollTop += delta;
+    }
+    this._recordAnchor();
+  }
+
+  private _offsetOf(el: Element): number {
+    return el.getBoundingClientRect().top - this._log.getBoundingClientRect().top;
+  }
+
+  private _recordAnchor() {
+    const top = this._log.getBoundingClientRect().top;
+    const el = this._messageElements().find((m) => m.getBoundingClientRect().bottom > top);
+    this._anchor = el ? { el, offset: this._offsetOf(el) } : undefined;
+  }
+
+  private _onSlotChange(e: Event) {
+    this._slotted = (e.target as HTMLSlotElement).assignedElements({ flatten: true }).length;
+    this._loadingOlder = false;
+    void this._afterRender();
   }
 
   private _onScroll() {
     const log = this._log;
     this._atBottom = log.scrollHeight - log.scrollTop - log.clientHeight < 24;
+    if (!this._atBottom) this._recordAnchor();
     if (log.scrollTop < 20 && this.hasMore && !this.loading && !this._loadingOlder) {
       this._loadingOlder = true;
       this.dispatchEvent(new CustomEvent('ep-chat-load-more', { bubbles: true, composed: true }));
@@ -267,7 +283,7 @@ export class EpChatPanel extends LitElement {
   }
 
   render() {
-    const empty = !this.messages.length && !this.querySelector('[slot="messages"]');
+    const empty = !this.messages.length && !this._slotted;
     return html`
       <header part="header">
         <h2 id="heading"><slot name="heading">${this.heading}</slot></h2>

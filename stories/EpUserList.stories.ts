@@ -62,3 +62,25 @@ export const ReadOnly: StoryObj<Args> = {
     await expect(list.shadowRoot!.querySelector<HTMLButtonElement>('.color-btn')!.disabled).toBe(true);
   },
 };
+
+export const RenameIsSentOnce: StoryObj<Args> = {
+  render: (args) => html`<div style="width:280px"><ep-user-list .users=${users} @ep-user-rename=${args.onRename}></ep-user-list></div>`,
+  play: async ({ canvasElement, args }) => {
+    const list = canvasElement.querySelector('ep-user-list') as EpUserList;
+    await list.updateComplete;
+    const input = list.shadowRoot!.querySelector('input')!;
+    input.value = 'New name';
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    await expect(args.onRename).toHaveBeenCalledTimes(1);
+    // Unrelated update before the app applied the rename (own name still old).
+    list.users = users.map((u) => (u.id === 'b' ? { ...u, name: 'Zoey' } : u));
+    await list.updateComplete;
+    input.dispatchEvent(new FocusEvent('blur'));
+    await expect(args.onRename).toHaveBeenCalledTimes(1);
+    // The app confirms the new name: no event either.
+    list.users = users.map((u) => (u.self ? { ...u, name: 'New name' } : u));
+    await list.updateComplete;
+    input.dispatchEvent(new FocusEvent('blur'));
+    await expect(args.onRename).toHaveBeenCalledTimes(1);
+  },
+};

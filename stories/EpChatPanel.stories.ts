@@ -113,3 +113,87 @@ export const Empty: StoryObj<Args> = {
     await expect(chat.shadowRoot!.querySelector('.empty')!.textContent).toBe('No messages yet');
   },
 };
+
+const frame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+export const KeepsPositionWhenHistoryArrives: StoryObj<Args> = {
+  render: (args) => html`
+    <div style="height:300px;width:320px">
+      <ep-chat-panel has-more .messages=${make(30, 100)} @ep-chat-load-more=${args.onMore}></ep-chat-panel>
+    </div>`,
+  play: async ({ canvasElement, args }) => {
+    const chat = canvasElement.querySelector('ep-chat-panel') as EpChatPanel;
+    await chat.updateComplete;
+    await frame();
+    const log = chat.shadowRoot!.querySelector('.log') as HTMLElement;
+    const msgAt = (id: number) =>
+      Array.from(chat.shadowRoot!.querySelectorAll('ep-chat-message')).find((m) => m.textContent === `Message ${id}`)!;
+
+    log.scrollTop = 0;
+    log.dispatchEvent(new Event('scroll'));
+    await expect(args.onMore).toHaveBeenCalledTimes(1);
+    const before = msgAt(100).getBoundingClientRect().top;
+
+    // The app rebuilds all entries (new objects, same ids) and does not use `loading`.
+    chat.messages = [...make(10, 0), ...make(30, 100)];
+    await chat.updateComplete;
+    await frame();
+    await expect(Math.abs(msgAt(100).getBoundingClientRect().top - before)).toBeLessThan(2);
+
+    // Loading more works again after the batch arrived.
+    log.scrollTop = 0;
+    log.dispatchEvent(new Event('scroll'));
+    await expect(args.onMore).toHaveBeenCalledTimes(2);
+
+    // A loading row that appears and disappears does not move the messages.
+    const anchor = msgAt(0).getBoundingClientRect().top;
+    chat.loading = true;
+    await chat.updateComplete;
+    await frame();
+    chat.loading = false;
+    await chat.updateComplete;
+    await frame();
+    await expect(Math.abs(msgAt(0).getBoundingClientRect().top - anchor)).toBeLessThan(2);
+  },
+};
+
+export const SlottedHistoryAndEmptyLabel: StoryObj<Args> = {
+  render: () => html`
+    <div style="height:240px;width:320px">
+      <ep-chat-panel empty-label="No messages yet"></ep-chat-panel>
+    </div>`,
+  play: async ({ canvasElement }) => {
+    const chat = canvasElement.querySelector('ep-chat-panel') as EpChatPanel;
+    await chat.updateComplete;
+    const empty = () => chat.shadowRoot!.querySelector('.empty');
+    await expect(empty()).not.toBeNull();
+
+    const add = (id: number, before?: Element) => {
+      const m = document.createElement('ep-chat-message');
+      m.slot = 'messages';
+      m.setAttribute('author', 'Sam');
+      m.textContent = `Slotted ${id}`;
+      chat.insertBefore(m, before ?? null);
+      return m;
+    };
+    let first = add(100);
+    for (let i = 101; i < 130; i++) add(i);
+    await chat.updateComplete;
+    await frame();
+    await expect(empty()).toBeNull();
+
+    const log = chat.shadowRoot!.querySelector('.log') as HTMLElement;
+    log.scrollTop = 150;
+    log.dispatchEvent(new Event('scroll'));
+    const watched = chat.querySelectorAll('ep-chat-message')[8];
+    const before = watched.getBoundingClientRect().top;
+    for (let i = 99; i >= 90; i--) first = add(i, first);
+    await frame();
+    await expect(Math.abs(watched.getBoundingClientRect().top - before)).toBeLessThan(2);
+
+    for (const m of Array.from(chat.querySelectorAll('ep-chat-message'))) m.remove();
+    await frame();
+    await chat.updateComplete;
+    await expect(empty()).not.toBeNull();
+  },
+};

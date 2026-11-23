@@ -71,6 +71,7 @@ export class EpSegmented extends LitElement {
   @property() label = '';
 
   private _choose(value: string, focus = false) {
+    if (this.disabled) return;
     if (value !== this.value) {
       this.value = value;
       this.dispatchEvent(new CustomEvent('ep-change', {
@@ -89,13 +90,14 @@ export class EpSegmented extends LitElement {
   }
 
   private _onKeydown(e: KeyboardEvent) {
+    if (this.disabled) return;
     const enabled = this.options.filter((o) => !o.disabled);
     if (!enabled.length) return;
     const at = enabled.findIndex((o) => o.value === this.value);
     let next: number;
     switch (e.key) {
-      case 'ArrowRight': case 'ArrowDown': next = (at + 1) % enabled.length; break;
-      case 'ArrowLeft': case 'ArrowUp': next = (at - 1 + enabled.length) % enabled.length; break;
+      case 'ArrowRight': case 'ArrowDown': next = at < 0 ? 0 : (at + 1) % enabled.length; break;
+      case 'ArrowLeft': case 'ArrowUp': next = at < 0 ? enabled.length - 1 : (at - 1 + enabled.length) % enabled.length; break;
       case 'Home': next = 0; break;
       case 'End': next = enabled.length - 1; break;
       default: return;
@@ -108,14 +110,15 @@ export class EpSegmented extends LitElement {
     const hasSelection = this.options.some((o) => o.value === this.value && !o.disabled);
     const firstEnabled = this.options.find((o) => !o.disabled)?.value;
     return html`
-      <div role="radiogroup" part="group" aria-label=${this.label || nothing} @keydown=${this._onKeydown}>
+      <div role="radiogroup" part="group" aria-label=${this.label || nothing}
+           aria-disabled=${this.disabled ? 'true' : nothing} @keydown=${this._onKeydown}>
         ${this.options.map((o) => {
           const checked = o.value === this.value;
           const tabbable = hasSelection ? checked : o.value === firstEnabled;
           return html`<button type="button" role="radio" part="option"
               aria-checked=${String(checked)}
               tabindex=${tabbable ? '0' : '-1'}
-              ?disabled=${o.disabled}
+              ?disabled=${this.disabled || !!o.disabled}
               @click=${() => this._choose(o.value)}>
               ${o.icon ? unsafeSVG(o.icon) : nothing}<span>${o.label}</span>
             </button>`;
