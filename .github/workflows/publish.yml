@@ -33,6 +33,22 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # A tag created beforehand (e.g. with a GitHub release) is only accepted
+      # if it points at the source being released; otherwise stop before
+      # anything is published.
+      - name: Check existing tag
+        run: |
+          TAG="v${{ inputs.version }}"
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            TAGGED=$(git rev-parse "$TAG^{commit}")
+            HEAD_SHA=$(git rev-parse HEAD)
+            if [ "$TAGGED" != "$HEAD_SHA" ]; then
+              echo "::error::Tag $TAG points at $TAGGED, but main is at $HEAD_SHA. Delete or move the tag, then run the release again."
+              exit 1
+            fi
+            echo "Tag $TAG already points at main ($HEAD_SHA); it is kept."
+          fi
+
       - name: Set version
         run: |
           npm pkg set version="${{ inputs.version }}"
@@ -68,7 +84,8 @@ jobs:
             git commit -m "release: v${{ inputs.version }}"
             git push origin HEAD:main
           fi
-          # A tag created beforehand (e.g. with a GitHub release) is kept.
+          # Checked above: an existing tag points at the released source
+          # (main before the version bump).
           if git rev-parse -q --verify "refs/tags/v${{ inputs.version }}" >/dev/null; then
             echo "Tag v${{ inputs.version }} already exists, not re-tagging"
           else
