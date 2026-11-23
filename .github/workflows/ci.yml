@@ -11,8 +11,10 @@ permissions:
   pages: write
   id-token: write
 
+# One run per branch or PR: a new push cancels the old run of the same
+# branch, never another branch's (Dependabot opens several at once).
 concurrency:
-  group: pages
+  group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -22,9 +24,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # The version comes from "packageManager" in package.json (pnpm 11).
       - uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - uses: actions/setup-node@v4
         with:
@@ -55,9 +56,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # The version comes from "packageManager" in package.json (pnpm 11).
       - uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - uses: actions/setup-node@v4
         with:
@@ -80,6 +80,10 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     needs: [check, test]
     runs-on: ubuntu-latest
+    # Pages deployments one after the other, never two at once.
+    concurrency:
+      group: pages
+      cancel-in-progress: false
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
