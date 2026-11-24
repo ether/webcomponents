@@ -258,6 +258,18 @@ export const CompositionAlwaysEnds: Story = {
       await expect(composing()).toBe(true);
       await new Promise((r) => setTimeout(r, 200));
       await expect(composing()).toBe(false);
+
+      // A pause longer than the timeout does not end a composition that is
+      // still going: further composition activity opens it again until the
+      // real compositionend.
+      body.dispatchEvent(new CompositionEvent('compositionupdate', { bubbles: true, data: 'x' }));
+      await expect(composing()).toBe(true);
+      await new Promise((r) => setTimeout(r, 200));
+      await expect(composing()).toBe(false);
+      body.dispatchEvent(new InputEvent('input', { bubbles: true, isComposing: true, inputType: 'insertCompositionText', data: 'y' }));
+      await expect(composing()).toBe(true);
+      body.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true }));
+      await expect(composing()).toBe(false);
     } finally {
       AceClass.COMPOSITION_TIMEOUT_MS = saved;
     }

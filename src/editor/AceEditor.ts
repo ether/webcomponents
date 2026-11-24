@@ -3146,6 +3146,19 @@ export class AceEditor {
     this.idleWorkTimer.atMost(0);
   }
 
+  /**
+   * Opens a composition if none is open (or re-opens one the watchdog closed
+   * while the browser was still composing) and re-arms the watchdog.
+   */
+  private beginComposition(): void {
+    if (!this.inInternationalComposition) {
+      this.inInternationalComposition = new Promise<void>((resolve) => {
+        this.endCompositionNow = resolve;
+      });
+    }
+    this.armCompositionWatchdog();
+  }
+
   /** Ends a composition that has been silent for too long (no compositionend). */
   private armCompositionWatchdog(): void {
     if (this.compositionWatchdog) clearTimeout(this.compositionWatchdog);
@@ -3176,7 +3189,10 @@ export class AceEditor {
     // longer part of a composition also ends one that never got its
     // compositionend (see below).
     this.targetBody.addEventListener('input', (e) => {
-      if (this.inInternationalComposition && (e as InputEvent).isComposing === false) {
+      const composing = (e as InputEvent).isComposing;
+      if (composing === true) {
+        this.beginComposition();
+      } else if (this.inInternationalComposition && composing === false) {
         this.endComposition();
       }
       this.idleWorkTimer.atMost(0);
@@ -3233,18 +3249,11 @@ export class AceEditor {
     // focus or a prediction is accepted - which left the pad "typing" locally
     // while nothing reached the server. So a composition also ends on blur, on
     // an input event that is no longer composing, and after a few seconds
-    // without any composition activity.
-    this.targetBody.addEventListener('compositionstart', () => {
-      if (this.inInternationalComposition) {
-        this.armCompositionWatchdog();
-        return;
-      }
-      this.inInternationalComposition = new Promise<void>((resolve) => {
-        this.endCompositionNow = resolve;
-      });
-      this.armCompositionWatchdog();
-    });
-    this.targetBody.addEventListener('compositionupdate', () => this.armCompositionWatchdog());
+    // without any composition activity. A pause alone does not prove the
+    // composition is over, so composition activity after the watchdog fired
+    // (compositionupdate or a composing input event) opens it again.
+    this.targetBody.addEventListener('compositionstart', () => this.beginComposition());
+    this.targetBody.addEventListener('compositionupdate', () => this.beginComposition());
     this.targetBody.addEventListener('compositionend', () => this.endComposition());
     this.targetBody.addEventListener('blur', () => this.endComposition());
   }
