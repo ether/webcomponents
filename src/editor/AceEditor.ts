@@ -108,6 +108,8 @@ export class AceEditor {
   private _nextId: number;
   private idleWorkTimer: any;
   private inInternationalComposition: any;
+  private endCompositionNow: (() => void) | null = null;
+  private compositionWatchdog: ReturnType<typeof setTimeout> | null = null;
   private thisKeyDoesntTriggerNormalize: boolean;
   private authorInfos: Record<string, any>;
   private changesetTracker: ReturnType<typeof makeChangesetTracker> | null = null;
@@ -3130,6 +3132,32 @@ export class AceEditor {
   // Private - Event Binding
   // -----------------------------------------------------------------------
 
+  /** Closes an open composition and incorporates what was typed. */
+  private endComposition(): void {
+    if (this.compositionWatchdog) {
+      clearTimeout(this.compositionWatchdog);
+      this.compositionWatchdog = null;
+    }
+    if (!this.inInternationalComposition) return;
+    const resolve = this.endCompositionNow;
+    this.inInternationalComposition = null;
+    this.endCompositionNow = null;
+    resolve?.();
+    this.idleWorkTimer.atMost(0);
+  }
+
+  /** Ends a composition that has been silent for too long (no compositionend). */
+  private armCompositionWatchdog(): void {
+    if (this.compositionWatchdog) clearTimeout(this.compositionWatchdog);
+    this.compositionWatchdog = setTimeout(() => {
+      this.compositionWatchdog = null;
+      this.endComposition();
+    }, AceEditor.COMPOSITION_TIMEOUT_MS);
+  }
+
+  /** Longest pause inside a composition before it counts as abandoned. */
+  static COMPOSITION_TIMEOUT_MS = 3000;
+
   private bindTheEventHandlers(): void {
     // Key events
     this.targetBody.addEventListener('keydown', (e) => this.handleKeyEvent(e));
@@ -3144,8 +3172,13 @@ export class AceEditor {
       });
     });
 
-    // Input event - schedule incorporateUserChanges
-    this.targetBody.addEventListener('input', () => {
+    // Input event - schedule incorporateUserChanges. An input that is no
+    // longer part of a composition also ends one that never got its
+    // compositionend (see below).
+    this.targetBody.addEventListener('input', (e) => {
+      if (this.inInternationalComposition && (e as InputEvent).isComposing === false) {
+        this.endComposition();
+      }
       this.idleWorkTimer.atMost(0);
     });
 
@@ -3191,17 +3224,28 @@ export class AceEditor {
       this.idleWorkTimer.atMost(0);
     });
 
-    // Composition events
+    // Composition events (IME input, dictation, and iOS inline predictions).
+    //
+    // While a composition is open, local changes are not incorporated and
+    // NEW_CHANGES from the server wait (collab_client awaits
+    // getInInternationalComposition). iOS Safari does not always send
+    // compositionend - e.g. when the keyboard is dismissed, the field loses
+    // focus or a prediction is accepted - which left the pad "typing" locally
+    // while nothing reached the server. So a composition also ends on blur, on
+    // an input event that is no longer composing, and after a few seconds
+    // without any composition activity.
     this.targetBody.addEventListener('compositionstart', () => {
-      if (this.inInternationalComposition) return;
+      if (this.inInternationalComposition) {
+        this.armCompositionWatchdog();
+        return;
+      }
       this.inInternationalComposition = new Promise<void>((resolve) => {
-        this.targetBody.addEventListener('compositionend', () => {
-          this.inInternationalComposition = null;
-          resolve();
-          // After composition ends, incorporate changes
-          this.idleWorkTimer.atMost(0);
-        }, {once: true});
+        this.endCompositionNow = resolve;
       });
+      this.armCompositionWatchdog();
     });
+    this.targetBody.addEventListener('compositionupdate', () => this.armCompositionWatchdog());
+    this.targetBody.addEventListener('compositionend', () => this.endComposition());
+    this.targetBody.addEventListener('blur', () => this.endComposition());
   }
 }
